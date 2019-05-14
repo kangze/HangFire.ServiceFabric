@@ -10,7 +10,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Hangfire.Core" Version="1.7.2" />
     <PackageReference Include="Microsoft.ServiceFabric.Services" Version="3.3.622" />
+    <PackageReference Include="Microsoft.ServiceFabric.Services.Remoting" Version="3.3.622" />
   </ItemGroup>
 
 </Project>
