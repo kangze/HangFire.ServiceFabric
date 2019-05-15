@@ -7,21 +7,23 @@ using System.Threading.Tasks;
 using Hangfire.Common;
 using Hangfire.Server;
 using Hangfire.Storage;
+using HangFireStorageService.Dto;
+using HangFireStorageService.Servces;
 
 namespace HangFireStorageService.Internal
 {
-    internal class ServiceFabricStorageConnect: IStorageConnection
+    internal class ServiceFabricStorageConnect : IStorageConnection
     {
-        
+
 
         public void Dispose()
         {
-            
+
         }
 
         public IWriteOnlyTransaction CreateWriteTransaction()
         {
-            throw new NotImplementedException();
+            return new ServiceFabricWriteOnlyTransaction(new List<OperationDto>(), new JobDataService(null));
         }
 
         public IDisposable AcquireDistributedLock(string resource, TimeSpan timeout)

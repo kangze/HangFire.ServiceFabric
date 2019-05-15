@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HangFireStorageService.Dto.Internal;
 
 namespace HangFireStorageService.Dto
 {
@@ -19,6 +20,7 @@ namespace HangFireStorageService.Dto
         SetJobState = 2,
 
         [Description("Add job state infomation")]
+        //[ArgumentType(typeof(AddJobStateArgument))]
         AddJobState = 3,
 
         [Description("Add a job to queue")]
