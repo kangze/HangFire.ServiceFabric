@@ -9,12 +9,19 @@ using Hangfire.Server;
 using Hangfire.Storage;
 using HangFireStorageService.Dto;
 using HangFireStorageService.Servces;
+using Mcs.Common.BaseServices;
 
 namespace HangFireStorageService.Internal
 {
     internal class ServiceFabricStorageConnect : IStorageConnection
     {
 
+        private readonly IJobDataService _jobDataService;
+
+        public ServiceFabricStorageConnect(IJobDataService jobDataService)
+        {
+            this._jobDataService = jobDataService;
+        }
 
         public void Dispose()
         {
@@ -28,12 +35,28 @@ namespace HangFireStorageService.Internal
 
         public IDisposable AcquireDistributedLock(string resource, TimeSpan timeout)
         {
-            throw new NotImplementedException();
+            var locker = new ServicesFabricDistributedLock(null, resource, timeout);
+            return locker.AcquireLock().GetAwaiter().GetResult();
         }
 
         public string CreateExpiredJob(Job job, IDictionary<string, string> parameters, DateTime createdAt, TimeSpan expireIn)
         {
-            throw new NotImplementedException();
+            var invocationData = InvocationData.SerializeJob(job);
+            var playload = invocationData.SerializePayload(true);
+            var parametersArrary = parameters.ToArray();
+            var jobDto = new JobDto()
+            {
+                Id = 0,//ID需要后续处理一下,
+                InvocationData = playload,
+                Arguments = invocationData.Arguments,
+                CreatedAt = createdAt,
+                ExpireAt = createdAt.Add(expireIn),
+                Parameters = new Dictionary<string, string>()
+            };
+            foreach (var pair in parameters)
+                jobDto.Parameters.Add(pair.Key, pair.Value);
+            jobDto = this._jobDataService.AddJobAsync(jobDto).GetAwaiter().GetResult();
+            return jobDto.Id.ToString();
         }
 
         public IFetchedJob FetchNextJob(string[] queues, CancellationToken cancellationToken)
@@ -53,7 +76,16 @@ namespace HangFireStorageService.Internal
 
         public JobData GetJobData(string jobId)
         {
-            throw new NotImplementedException();
+            var job = this._jobDataService.GetJobAsync(long.Parse(jobId)).GetAwaiter().GetResult();
+            var invocationData = InvocationData.DeserializePayload(job.InvocationData);
+            var jobData = new JobData()
+            {
+                CreatedAt = job.CreatedAt,
+                LoadException = null,
+                Job = invocationData.DeserializeJob(),
+                State = job.StateName
+            };
+            return jobData;
         }
 
         public StateData GetStateData(string jobId)

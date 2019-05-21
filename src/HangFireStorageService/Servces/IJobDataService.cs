@@ -15,5 +15,19 @@ namespace HangFireStorageService.Servces
         /// </summary>
         /// <returns></returns>
         Task UpdateJobAsync(List<OperationDto> operations);
+
+        /// <summary>
+        /// 添加工作任务
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
+        Task<JobDto> AddJobAsync(JobDto dto);
+
+        /// <summary>
+        /// 获取一个Job任务
+        /// </summary>
+        /// <param name="jobId"></param>
+        /// <returns></returns>
+        Task<JobDto> GetJobAsync(long jobId);
     }
 }

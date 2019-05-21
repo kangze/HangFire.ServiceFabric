@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -11,8 +11,9 @@
 
   <ItemGroup>
     <PackageReference Include="Hangfire.Core" Version="1.7.2" />
-    <PackageReference Include="Microsoft.ServiceFabric.Services" Version="3.3.622" />
-    <PackageReference Include="Microsoft.ServiceFabric.Services.Remoting" Version="3.3.622" />
+    <PackageReference Include="Mcs.Common.BaseServices" Version="1.0.10" />
+    <PackageReference Include="Microsoft.ServiceFabric.Services" Version="3.3.638" />
+    <PackageReference Include="Microsoft.ServiceFabric.Services.Remoting" Version="3.3.638" />
   </ItemGroup>
 
 </Project>

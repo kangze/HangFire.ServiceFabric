@@ -66,5 +66,15 @@ namespace HangFireStorageService.Servces
 
             _jobAndstateProccesser = new JobAndStateProccesser(tx, states, jobs);
         }
+
+        public async Task<JobDto> AddJobAsync(JobDto dto)
+        {
+            return new JobDto();
+        }
+
+        public async Task<JobDto> GetJobAsync(long jobId)
+        {
+            return new JobDto();
+        }
     }
 }

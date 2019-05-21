@@ -18,6 +18,8 @@ namespace HangFireStorageService.Dto
 
         public string Arguments { get; set; }
 
+        public Dictionary<string,string> Parameters { get; set; }
+
         public DateTime CreatedAt { get; set; }
 
         public DateTime? ExpireAt { get; set; }
