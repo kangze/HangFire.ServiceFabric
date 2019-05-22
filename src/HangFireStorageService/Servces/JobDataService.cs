@@ -72,9 +72,24 @@ namespace HangFireStorageService.Servces
             return new JobDto();
         }
 
+        public async Task AddOrUpdateJobParameter(string jobId, string name, string value)
+        {
+            return;
+        }
+
+        public async Task<string> GetJobParameter(string jobId,string name)
+        {
+            return "";
+        }
+
         public async Task<JobDto> GetJobAsync(long jobId)
         {
             return new JobDto();
+        }
+
+        public async Task  GetJobState(long jobId)
+        {
+            
         }
     }
 }

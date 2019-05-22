@@ -11,6 +11,16 @@ namespace HangFireStorageService.Servces
     public interface IJobDataService : IService
     {
         /// <summary>
+        /// 获取Job的参数
+        /// </summary>
+        /// <param name="jobId"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        Task<string> GetJobParameter(string jobId, string name);
+
+        Task AddOrUpdateJobParameter(string jobId, string name, string value);
+
+        /// <summary>
         /// 更新操作
         /// </summary>
         /// <returns></returns>

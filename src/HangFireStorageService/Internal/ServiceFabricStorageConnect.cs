@@ -66,12 +66,14 @@ namespace HangFireStorageService.Internal
 
         public void SetJobParameter(string id, string name, string value)
         {
-            throw new NotImplementedException();
+            this._jobDataService.AddOrUpdateJobParameter(id, name, value).GetAwaiter().GetResult();
+
         }
 
         public string GetJobParameter(string id, string name)
         {
-            throw new NotImplementedException();
+            var value = this._jobDataService.GetJobParameter(id, name).GetAwaiter().GetResult();
+            return value;
         }
 
         public JobData GetJobData(string jobId)
