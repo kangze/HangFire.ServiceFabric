@@ -19,16 +19,25 @@ namespace HangFireStorageService.Internal
         private readonly IJobDataService _jobDataService;
         private readonly IJobAppService _jobAppService;
         private readonly IJobStateDataAppService _jobStateDataAppService;
+        private readonly IServerAppService _serverAppService;
+        private readonly IJobSetAppService _jobSetsAppService;
+        private readonly IHashAppService _hashAppService;
 
         public ServiceFabricStorageConnect(
             IJobDataService jobDataService,
             IJobAppService jobAppService,
-            IJobStateDataAppService jobStateDataAppService
+            IJobStateDataAppService jobStateDataAppService,
+            IServerAppService serverAppService,
+            IJobSetAppService setsAppService,
+            IHashAppService hashAppService
             )
         {
             this._jobDataService = jobDataService;
             this._jobAppService = jobAppService;
             this._jobStateDataAppService = jobStateDataAppService;
+            this._serverAppService = serverAppService;
+            this._jobSetsAppService = setsAppService;
+            this._hashAppService = hashAppService;
         }
 
         public void Dispose()
@@ -122,42 +131,74 @@ namespace HangFireStorageService.Internal
 
         public void AnnounceServer(string serverId, ServerContext context)
         {
-            throw new NotImplementedException();
+            var serverData = new ServerData()
+            {
+                Queues = context.Queues,
+                WorkCount = context.WorkerCount,
+                StartedAt = DateTime.UtcNow,
+            };
+            this._serverAppService.AddOrUpdateAsync(serverId, SerializationHelper.Serialize(serverData), DateTime.UtcNow).GetAwaiter().GetResult();
+
         }
 
         public void RemoveServer(string serverId)
         {
-            throw new NotImplementedException();
+            this._serverAppService.RemoveServer(serverId);
         }
 
         public void Heartbeat(string serverId)
         {
-            throw new NotImplementedException();
+            var server = this._serverAppService.GetServerAsync(serverId).GetAwaiter().GetResult();
+            if (server == null)
+                throw new Exception("Has not found that server,serverId:" + serverId);
+            this._serverAppService.AddOrUpdateAsync(serverId, server.Data, DateTime.UtcNow);
         }
 
         public int RemoveTimedOutServers(TimeSpan timeOut)
         {
-            throw new NotImplementedException();
+            if (timeOut.Duration() != timeOut)
+            {
+                throw new ArgumentException("The `timeOut` value must be positive.", nameof(timeOut));
+            }
+            int count = 0;
+            var serverDtos = this._serverAppService.GetAllServerAsync().GetAwaiter().GetResult();
+            foreach (var server in serverDtos)
+            {
+                if (server.LastHeartbeat < DateTime.UtcNow.Add(timeOut.Negate()))
+                {
+                    this._serverAppService.RemoveServer(server.ServerId).GetAwaiter().GetResult();
+                    count++;
+                }
+            }
+            return count;
         }
 
         public HashSet<string> GetAllItemsFromSet(string key)
         {
-            throw new NotImplementedException();
+            var all_sets = this._jobSetsAppService.GetAllSetsAsync().GetAwaiter().GetResult();
+            return all_sets.Where(u => u.Key == key).Select(u => u.Value).ToHashSet();
         }
 
         public string GetFirstByLowestScoreFromSet(string key, double fromScore, double toScore)
         {
-            throw new NotImplementedException();
+            if (key == null) throw new ArgumentNullException(nameof(key));
+            if (toScore < fromScore) throw new ArgumentException("The `toScore` value must be higher or equal to the `fromScore` value.", nameof(toScore));
+
+            var all_sets = this._jobSetsAppService.GetAllSetsAsync().GetAwaiter().GetResult();
+            var firtst_set = all_sets.Where(u => u.Score >= fromScore && u.Score <= toScore).OrderBy(u => u.Score).FirstOrDefault();
+            return firtst_set == null ? "" : firtst_set.Value;
         }
 
         public void SetRangeInHash(string key, IEnumerable<KeyValuePair<string, string>> keyValuePairs)
         {
-            throw new NotImplementedException();
+            //normal,there must exited a blocked it
+            this._hashAppService.AddOrUpdateAsync(key, keyValuePairs.ToDictionary(u => u.Key, u => u.Value)).GetAwaiter().GetResult();
         }
 
         public Dictionary<string, string> GetAllEntriesFromHash(string key)
         {
-            throw new NotImplementedException();
+            var all_hash = this._hashAppService.GetAllHashAsync().GetAwaiter().GetResult();
+            return all_hash.Where(u => u.Key == key).ToDictionary(u => u.Field, u => u.Value);
         }
     }
 }

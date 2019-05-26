@@ -1,4 +1,5 @@
 ﻿using Hangfire.Storage.Monitoring;
+using HangFireStorageService.Dto;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,8 +10,12 @@ namespace HangFireStorageService.Servces
 {
     public interface IServerAppService
     {
-        Task AnnounceServerAsync(string serverId, string data, DateTimeOffset heartBeat);
+        Task AddOrUpdateAsync(string serverId, string data, DateTimeOffset heartBeat);
 
         Task<ServerDtos> GetServerAsync(string serverId);
+
+        Task<List<ServerDtos>> GetAllServerAsync();
+
+        Task RemoveServer(string serverId);
     }
 }

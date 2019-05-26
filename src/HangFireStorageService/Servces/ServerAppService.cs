@@ -19,7 +19,7 @@ namespace HangFireStorageService.Servces
             this._stateManager = stateManager;
         }
 
-        public async Task AnnounceServerAsync(string serverId, string data, DateTimeOffset heartBeat)
+        public async Task AddOrUpdateAsync(string serverId, string data, DateTimeOffset heartBeat)
         {
             if (string.IsNullOrEmpty(serverId))
                 throw new ArgumentNullException(nameof(serverId));
@@ -52,6 +52,21 @@ namespace HangFireStorageService.Servces
 
         }
 
+        public async Task<List<ServerDtos>> GetAllServerAsync()
+        {
+            var server_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, ServerDtos>>(Consts.SERVER_DICT);
+            using (var tx = this._stateManager.CreateTransaction())
+            {
+                var ls = new List<ServerDtos>();
+                var enumerator = (await server_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+                while (await enumerator.MoveNextAsync(default))
+                {
+                    ls.Add(enumerator.Current.Value);
+                }
+                return ls;
+            }
+        }
+
         public async Task<ServerDtos> GetServerAsync(string serverId)
         {
             if (string.IsNullOrEmpty(serverId))
@@ -62,6 +77,18 @@ namespace HangFireStorageService.Servces
             {
                 var server_condition = await server_dict.TryGetValueAsync(tx, serverId);
                 return server_condition.HasValue ? server_condition.Value : null;
+            }
+        }
+
+        public async Task RemoveServer(string serverId)
+        {
+            if (string.IsNullOrEmpty(serverId))
+                throw new ArgumentNullException(nameof(serverId));
+            var server_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, ServerDtos>>(Consts.SERVER_DICT);
+            using (var tx = this._stateManager.CreateTransaction())
+            {
+                await server_dict.TryRemoveAsync(tx, serverId);
+                await tx.CommitAsync();
             }
         }
     }
