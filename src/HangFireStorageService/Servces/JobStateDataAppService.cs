@@ -18,6 +18,21 @@ namespace HangFireStorageService.Servces
             this._stateManager = stateManager;
         }
 
+        public async Task<List<StateDto>> GetAllStateAsync()
+        {
+            var ls = new List<StateDto>();
+            var stateDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, StateDto>>(Consts.STATE_DICT);
+            using (var tx = this._stateManager.CreateTransaction())
+            {
+                var enumlator = (await stateDict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+                while (await enumlator.MoveNextAsync(default))
+                {
+                    ls.Add(enumlator.Current.Value);
+                }
+                return ls;
+            }
+        }
+
         public async Task<StateDto> GetLatestJobStateDataAsync(long jobId)
         {
             var jobDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(Consts.JOB_DICT);
@@ -31,6 +46,21 @@ namespace HangFireStorageService.Servces
                 if (!state_condition.HasValue)
                     return null;
                 return state_condition.Value;
+            }
+        }
+
+        public async Task<List<StateDto>> GetStates(long jobId)
+        {
+            var stateDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, StateDto>>(Consts.STATE_DICT);
+            using (var tx = this._stateManager.CreateTransaction())
+            {
+                var ls = new List<StateDto>();
+                var enumlator = (await stateDict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+                while (await enumlator.MoveNextAsync(default))
+                {
+                    ls.Add(enumlator.Current.Value);
+                }
+                return ls;
             }
         }
     }

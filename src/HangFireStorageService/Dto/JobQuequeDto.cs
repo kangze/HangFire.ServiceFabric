@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace HangFireStorageService.Dto
 {
-    public class ServerDtos
+    public class JobQuequeDto
     {
-        public string ServerId { get; set; }
+        public long JobId { get; set; }
 
-        public string Data { get; set; }
+        public string Queue { get; set; }
 
-        public DateTime? LastHeartbeat { get; set; }
+        public DateTime? FetchedAt { get; set; }
     }
 }

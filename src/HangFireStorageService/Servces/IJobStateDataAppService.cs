@@ -10,5 +10,11 @@ namespace HangFireStorageService.Servces
     public interface IJobStateDataAppService
     {
         Task<StateDto> GetLatestJobStateDataAsync(long jobId);
+
+        Task<List<StateDto>> GetAllStateAsync();
+
+        Task<List<StateDto>> GetStates(long jobId);
+
+        
     }
 }

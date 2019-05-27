@@ -35,6 +35,37 @@ namespace HangFireStorageService.Servces
             return job;
         }
 
+        public async Task<List<JobDto>> GetAllJobsAsync()
+        {
+            var ls = new List<JobDto>();
+            var jobDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(Consts.JOB_DICT);
+            using (var tx = this._stateManager.CreateTransaction())
+            {
+                var emulator = (await jobDict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+                while (await emulator.MoveNextAsync(default))
+                {
+                    ls.Add(emulator.Current.Value);
+                }
+                return ls;
+            }
+        }
+
+        public async Task<int> GetNumberbyStateName(string stateName)
+        {
+            var jobDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(Consts.JOB_DICT);
+            using (var tx = this._stateManager.CreateTransaction())
+            {
+                var count = 0;
+                var enumlator = (await jobDict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+                while (await enumlator.MoveNextAsync(default))
+                {
+                    if (enumlator.Current.Value.StateName == stateName)
+                        ++count;
+                }
+                return count;
+            }
+        }
+
         public async Task<JobDto> GetJobAsync(long JobId)
         {
             var jobDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(Consts.JOB_DICT);

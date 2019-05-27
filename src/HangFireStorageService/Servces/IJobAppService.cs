@@ -13,6 +13,10 @@ namespace HangFireStorageService.Servces
 
         Task<JobDto> GetJobAsync(long JobId);
 
+        Task<List<JobDto>> GetAllJobsAsync();
+
         Task UpdateJobAsync(JobDto job);
+
+        Task<int> GetNumberbyStateName(string stateName);
     }
 }
