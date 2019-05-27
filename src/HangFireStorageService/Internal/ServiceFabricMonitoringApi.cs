@@ -194,7 +194,38 @@ namespace HangFireStorageService.Internal
 
         public JobList<FetchedJobDto> FetchedJobs(string queue, int @from, int perPage)
         {
-            throw new NotImplementedException();
+            var all_queueus = this._jobQueueAppService.GetAllJobQueueusAsync().GetAwaiter().GetResult();
+            var job_queues = all_queueus.Where(u => u.Queue == queue && u.FetchedAt == null)
+                .OrderBy(u => u.Id)
+                .Skip(from)
+                .Take(perPage)
+                .Select(u => u.JobId)
+                .ToList();
+            return this.FetchedJobs(job_queues.ToArray());
+            
+        }
+
+        private JobList<FetchedJobDto> FetchedJobs(long[] jobIds)
+        {
+            var all_job = this._jobAppService.GetAllJobsAsync().GetAwaiter().GetResult();
+            var all_state = this._jobStateDataAppService.GetAllStateAsync().GetAwaiter().GetResult();
+            var job_states = (from job in all_job
+                              from state in all_state
+                              where state.JobId == job.Id &&
+                              job.StateId == state.Id &&
+                              jobIds.Contains(job.Id)
+                              select new { job, state }).ToList();
+            var result = new List<KeyValuePair<string, FetchedJobDto>>(job_states.Count);
+            foreach(var item in job_states)
+            {
+                result.Add(new KeyValuePair<string, FetchedJobDto>(item.job.Id.ToString(), new FetchedJobDto()
+                {
+                    Job = null,//重构这里的代码
+                    State = item.job.StateName
+                }));
+            }
+            return new JobList<FetchedJobDto>(result);
+
         }
 
         public JobList<ProcessingJobDto> ProcessingJobs(int @from, int count)
@@ -280,12 +311,22 @@ namespace HangFireStorageService.Internal
 
         public long EnqueuedCount(string queue)
         {
-            throw new NotImplementedException();
+            var job_queueus = this._jobQueueAppService.GetAllJobQueueusAsync().GetAwaiter().GetResult();
+            return job_queueus.Where(u => u.Queue == queue).Aggregate(0, (t, next) =>
+            {
+                if (next.FetchedAt == null) return ++t;
+                return 0;
+            });
         }
 
         public long FetchedCount(string queue)
         {
-            throw new NotImplementedException();
+            var job_queueus = this._jobQueueAppService.GetAllJobQueueusAsync().GetAwaiter().GetResult();
+            return job_queueus.Where(u => u.Queue == queue).Aggregate(0, (t, next) =>
+            {
+                if (next.FetchedAt != null) return ++t;
+                return 0;
+            });
         }
 
         public long FailedCount()
