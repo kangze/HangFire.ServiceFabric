@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HangFireStorageService.Dto;
+using HangFireStorageService.Extensions;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Data.Collections;
 
@@ -12,10 +13,12 @@ namespace HangFireStorageService.Servces
     public class JobAppService : IJobAppService
     {
         private readonly IReliableStateManager _stateManager;
+        private readonly ServiceFabricOptions _options;
 
-        public JobAppService(IReliableStateManager stateManager)
+        public JobAppService(IReliableStateManager stateManager, ServiceFabricOptions options)
         {
-            _stateManager = stateManager;
+            this._stateManager = stateManager;
+            this._options = options;
         }
 
 

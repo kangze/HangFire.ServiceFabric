@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="Hangfire.Core" Version="1.7.2" />
     <PackageReference Include="Mcs.Common.BaseServices" Version="1.0.10" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
     <PackageReference Include="Microsoft.ServiceFabric.Services" Version="3.3.638" />
     <PackageReference Include="Microsoft.ServiceFabric.Services.Remoting" Version="3.3.638" />
   </ItemGroup>

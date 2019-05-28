@@ -10,6 +10,8 @@ namespace HangFireStorageService.Internal
 {
     public class ServiceFabricStorage : JobStorage
     {
+        
+
         public override IMonitoringApi GetMonitoringApi()
         {
             return new ServiceFabricMonitoringApi();
