@@ -1,4 +1,5 @@
 ﻿using HangFireStorageService.Dto;
+using HangFireStorageService.Extensions;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Data.Collections;
 using System;
@@ -12,23 +13,27 @@ namespace HangFireStorageService.Servces
     public class JobQueueuAppService : IJobQueueAppService
     {
         private readonly IReliableStateManager _stateManager;
+        private readonly ServiceFabricOptions _options;
 
-        public JobQueueuAppService(IReliableStateManager stateManager)
+        public JobQueueuAppService(IReliableStateManager stateManager, ServiceFabricOptions options)
         {
             this._stateManager = stateManager;
+            this._options = options;
         }
 
-        public async Task<List<JobQuequeDto>> GetAllJobQueueusAsync()
+        public async Task<List<JobQueueDto>> GetQueuesAsync(string queue)
         {
-            //TODO:还必须加入一个去重的操作
-            var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, List<JobQuequeDto>>>(Consts.JOBQUEUE_DICT);
+            var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, List<JobQueueDto>>>(string.Format(Consts.JOBQUEUE_DICT, this._options.Prefix));
             using (var tx = this._stateManager.CreateTransaction())
             {
-                var emulator = (await queues_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
-                var ls = new List<JobQuequeDto>();
-                while (await emulator.MoveNextAsync(default))
+                var enumerator = (await queues_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+                var ls = new List<JobQueueDto>();
+                while (await enumerator.MoveNextAsync(default))
                 {
-                    ls.AddRange(emulator.Current.Value);
+                    if (string.IsNullOrEmpty(queue))
+                        ls.AddRange(enumerator.Current.Value);
+                    else
+                        ls.AddRange(enumerator.Current.Value.Where(u => u.Queue == queue).ToList());
                 }
                 return ls;
             }

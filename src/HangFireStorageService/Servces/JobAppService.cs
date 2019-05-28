@@ -26,7 +26,7 @@ namespace HangFireStorageService.Servces
         {
             if (job == null)
                 throw new ArgumentNullException(nameof(job));
-            var jobDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(Consts.JOB_DICT);
+            var jobDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(string.Format(Consts.JOB_DICT, this._options.Prefix));
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var count = await jobDict.GetCountAsync(tx);
@@ -41,7 +41,7 @@ namespace HangFireStorageService.Servces
         public async Task<List<JobDto>> GetAllJobsAsync()
         {
             var ls = new List<JobDto>();
-            var jobDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(Consts.JOB_DICT);
+            var jobDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(string.Format(Consts.JOB_DICT, this._options.Prefix));
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var emulator = (await jobDict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
@@ -55,7 +55,7 @@ namespace HangFireStorageService.Servces
 
         public async Task<int> GetNumberbyStateName(string stateName)
         {
-            var jobDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(Consts.JOB_DICT);
+            var jobDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(string.Format(Consts.JOB_DICT, this._options.Prefix));
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var count = 0;
@@ -71,7 +71,7 @@ namespace HangFireStorageService.Servces
 
         public async Task<JobDto> GetJobAsync(long JobId)
         {
-            var jobDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(Consts.JOB_DICT);
+            var jobDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(string.Format(Consts.JOB_DICT, this._options.Prefix));
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var job_condition = await jobDict.TryGetValueAsync(tx, JobId);
@@ -91,6 +91,46 @@ namespace HangFireStorageService.Servces
                 await jobDict.SetAsync(tx, job.Id, job);
                 await tx.CommitAsync();
             }
+        }
+
+        public async Task<List<JobDetail>> GetJobDetailsAsync(long[] jobIds)
+        {
+            var job_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(string.Format(Consts.JOB_DICT, this._options.Prefix));
+            var state_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, StateDto>>(string.Format(Consts.STATE_DICT, this._options.Prefix));
+            var result = new List<JobDetail>();
+            using (var tx = this._stateManager.CreateTransaction())
+            {
+                foreach (var jobId in jobIds)
+                {
+                    var job_condition = await job_dict.TryGetValueAsync(tx, jobId);
+                    if (job_condition.HasValue)
+                    {
+                        var jobDetail = new JobDetail()
+                        {
+                            Id = job_condition.Value.Id,
+                            InvocationData = job_condition.Value.InvocationData,
+                            Arguments = job_condition.Value.Arguments,
+                            CreateAt = job_condition.Value.CreatedAt,
+                            ExpireAt = job_condition.Value.ExpireAt,
+                            StateName = job_condition.Value.StateName,
+                            StateId = job_condition.Value.StateId
+                        };
+                        var state_condition = await state_dict.TryGetValueAsync(tx, job_condition.Value.StateId);
+                        if (state_condition.HasValue)
+                        {
+                            jobDetail.Reason = state_condition.Value.Reason;
+                            jobDetail.StateData = state_condition.Value.Data;
+                            jobDetail.StateChanged = state_condition.Value.CreatedAt;
+                        }
+                        result.Add(jobDetail);
+                    }
+                    else
+                    {
+                        result.Add(new JobDetail() { Id = jobId });
+                    }
+                }
+            }
+            return result;
         }
     }
 }

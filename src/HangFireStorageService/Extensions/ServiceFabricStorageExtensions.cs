@@ -1,6 +1,7 @@
 ﻿using Hangfire;
 using Hangfire.Annotations;
 using HangFireStorageService.Servces;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Services.Communication.Runtime;
 using Microsoft.ServiceFabric.Services.Remoting.V2.FabricTransport.Runtime;
@@ -18,13 +19,15 @@ namespace HangFireStorageService.Extensions
             [NotNull] this IGlobalConfiguration configuration,
             [NotNull] ServiceFabricOptions options)
         {
-            if (options == null)
-                options = new ServiceFabricOptions();
+            if (options == null) options = new ServiceFabricOptions();
             var storage = new ServiceFabricStorage();
             return configuration.UseStorage(storage);
         }
 
-        public static ServiceCollection
+        public static IServiceCollection AddHangfireServiceFabricService(this IServiceCollection services)
+        {
+            return services;
+        }
 
         public static IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners(IReliableStateManager stateManager, ServiceFabricOptions options)
         {

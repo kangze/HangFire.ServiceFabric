@@ -10,10 +10,7 @@ namespace HangFireStorageService.Servces
 {
     public interface IJobQueueAppService : IService
     {
-        /// <summary>
-        /// 获取所有的JobQueues
-        /// </summary>
-        /// <returns></returns>
-        Task<List<JobQuequeDto>> GetAllJobQueueusAsync();
+        Task<List<JobQueueDto>> GetQueuesAsync(string queue);
+
     }
 }

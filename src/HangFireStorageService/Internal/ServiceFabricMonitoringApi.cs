@@ -44,19 +44,36 @@ namespace HangFireStorageService.Internal
         public IList<QueueWithTopEnqueuedJobsDto> Queues()
         {
 
-            var job_queueus = this._jobQueueAppService.GetAllJobQueueusAsync().GetAwaiter().GetResult();
+            var job_queueus = this._jobQueueAppService.GetQueuesAsync(null).GetAwaiter().GetResult();
+            //var queue_names = job_queueus.Select(u => u.Queue).ToList().Distinct();
             var result = new List<QueueWithTopEnqueuedJobsDto>(job_queueus.Count);
-            //需要更具queue进行一次分组
+            //需要根据queue进行一次分组
             var groupd_queues = job_queueus.GroupBy(u => u.Queue);
             foreach (var queue in groupd_queues)
             {
-                var enqueueJobIds = queue
-                    .Where(u => u.FetchedAt == null)
-                    .OrderBy(u => u.JobId)
-                    .Take(5)
-                    .Select(u => u.JobId)
-                    .ToList();
-                var array = queue.ToArray(); ;
+                var queue_jobs = this._jobQueueAppService.GetQueuesAsync(queue.Key).GetAwaiter().GetResult();
+                var enqueueJobIds = queue_jobs
+                  .Where(u => u.FetchedAt == null)
+                  .OrderBy(u => u.JobId)
+                  .Take(5)
+                  .Select(u => u.JobId)
+                  .ToList()
+                  .Distinct();
+
+                var jobDetails = this._jobAppService.GetJobDetailsAsync(enqueueJobIds.ToArray()).GetAwaiter().GetResult();
+                var firstJob = Servces.JobHelper.DeserializeJobs(
+                    jobDetails,
+                    (jobDetail, job, stateData) => new EnqueuedJobDto
+                    {
+                        Job = job,
+                        State = jobDetail.StateName,
+                        InEnqueuedState = EnqueuedState.StateName.Equals(jobDetail.StateName, StringComparison.OrdinalIgnoreCase),
+                        EnqueuedAt = EnqueuedState.StateName.Equals(jobDetail.StateName, StringComparison.OrdinalIgnoreCase)
+                            ? jobDetail.StateChanged
+                            : null
+                    });
+
+                var array = queue.ToList();
                 var enqueuedCount = array.Aggregate(0, (a, netx) =>
                 {
                     if (netx.FetchedAt == null) return ++a;
@@ -67,35 +84,16 @@ namespace HangFireStorageService.Internal
                     if (next.FetchedAt != null) return ++a;
                     return 0;
                 });
-                //var firstJobs = ,call EnquequeJObs
+
                 result.Add(new QueueWithTopEnqueuedJobsDto()
                 {
                     Name = queue.Key,
                     Length = enqueuedCount,
                     Fetched = fetchedCount,
-                    FirstJobs = null
+                    FirstJobs = firstJob
                 });
             }
             return result;
-        }
-
-        private void EnqueueJobs(long[] jobIds)
-        {
-            var all_jobs = this._jobAppService.GetAllJobsAsync().GetAwaiter().GetResult();
-            var all_state = this._jobStateDataAppService.GetAllStateAsync().GetAwaiter().GetResult();
-            var job_states = from job in all_jobs
-                             from state in all_state
-                             where jobIds.Contains(job.Id) &&
-                             job.Id == state.JobId &&
-                             state.Id == job.StateId
-                             select new
-                             {
-                                 job,
-                                 state
-                             };
-            var jobs = job_states.ToDictionary(u => u.job.Id, u => u);
-            var sortedJobs = jobIds.Select(jobId => jobs.ContainsKey(jobId) ? jobs[jobId] : null).ToList();
-
         }
 
         public IList<ServerDto> Servers()
@@ -181,48 +179,50 @@ namespace HangFireStorageService.Internal
 
         public JobList<EnqueuedJobDto> EnqueuedJobs(string queue, int @from, int perPage)
         {
-            var job_queueus = this._jobQueueAppService.GetAllJobQueueusAsync().GetAwaiter().GetResult();
+            var job_queueus = this._jobQueueAppService.GetQueuesAsync(queue).GetAwaiter().GetResult();
             var enqueueJobIds = job_queueus
-                  .Where(u => u.FetchedAt == null && u.Queue == queue)
+                  .Where(u => u.FetchedAt == null)
                   .OrderBy(u => u.JobId)
-                  .Take(5)
+                  .Skip(from)
+                  .Take(from + perPage - 1)
                   .Select(u => u.JobId)
                   .ToList();
-            this.EnqueueJobs(enqueueJobIds.ToArray());
-            return null; //TODO:这里是一个重构的点
+            var jobDetails = this._jobAppService.GetJobDetailsAsync(enqueueJobIds.ToArray()).GetAwaiter().GetResult();
+            return Servces.JobHelper.DeserializeJobs(
+                jobDetails,
+                (jobDetail, job, stateData) => new EnqueuedJobDto
+                {
+                    Job = job,
+                    State = jobDetail.StateName,
+                    InEnqueuedState = EnqueuedState.StateName.Equals(jobDetail.StateName, StringComparison.OrdinalIgnoreCase),
+                    EnqueuedAt = EnqueuedState.StateName.Equals(jobDetail.StateName, StringComparison.OrdinalIgnoreCase)
+                        ? jobDetail.StateChanged
+                        : null
+                });
         }
 
         public JobList<FetchedJobDto> FetchedJobs(string queue, int @from, int perPage)
         {
-            var all_queueus = this._jobQueueAppService.GetAllJobQueueusAsync().GetAwaiter().GetResult();
-            var job_queues = all_queueus.Where(u => u.Queue == queue && u.FetchedAt == null)
-                .OrderBy(u => u.Id)
-                .Skip(from)
-                .Take(perPage)
-                .Select(u => u.JobId)
-                .ToList();
-            return this.FetchedJobs(job_queues.ToArray());
-            
-        }
+            var job_queueus = this._jobQueueAppService.GetQueuesAsync(queue).GetAwaiter().GetResult();
+            var enqueueJobIds = job_queueus
+                  .Where(u => u.FetchedAt != null)
+                  .OrderBy(u => u.JobId)
+                  .Skip(from)
+                  .Take(from + perPage - 1)
+                  .Select(u => u.JobId)
+                  .ToList();
+            var jobDetails = this._jobAppService.GetJobDetailsAsync(enqueueJobIds.ToArray()).GetAwaiter().GetResult();
 
-        private JobList<FetchedJobDto> FetchedJobs(long[] jobIds)
-        {
-            var all_job = this._jobAppService.GetAllJobsAsync().GetAwaiter().GetResult();
-            var all_state = this._jobStateDataAppService.GetAllStateAsync().GetAwaiter().GetResult();
-            var job_states = (from job in all_job
-                              from state in all_state
-                              where state.JobId == job.Id &&
-                              job.StateId == state.Id &&
-                              jobIds.Contains(job.Id)
-                              select new { job, state }).ToList();
-            var result = new List<KeyValuePair<string, FetchedJobDto>>(job_states.Count);
-            foreach(var item in job_states)
+            var result = new List<KeyValuePair<string, FetchedJobDto>>(jobDetails.Count);
+            foreach (var job in jobDetails)
             {
-                result.Add(new KeyValuePair<string, FetchedJobDto>(item.job.Id.ToString(), new FetchedJobDto()
-                {
-                    Job = null,//重构这里的代码
-                    State = item.job.StateName
-                }));
+                result.Add(new KeyValuePair<string, FetchedJobDto>(
+                    job.Id.ToString(),
+                    new FetchedJobDto
+                    {
+                        Job = Servces.JobHelper.DeserializeJob(job.InvocationData, job.Arguments),
+                        State = job.StateName,
+                    }));
             }
             return new JobList<FetchedJobDto>(result);
 
@@ -250,7 +250,7 @@ namespace HangFireStorageService.Internal
                 {
                     Job = job,
                     InScheduledState = ScheduledState.StateName.Equals(jobDto.StateName, StringComparison.OrdinalIgnoreCase),
-                    EnqueueAt = JobHelper.DeserializeNullableDateTime(stateData["EnqueueAt"]) ?? DateTime.MinValue,
+                    EnqueueAt = Hangfire.Common.JobHelper.DeserializeNullableDateTime(stateData["EnqueueAt"]) ?? DateTime.MinValue,
                     ScheduledAt = jobDto.CreatedAt,
                 };
             });
@@ -311,8 +311,8 @@ namespace HangFireStorageService.Internal
 
         public long EnqueuedCount(string queue)
         {
-            var job_queueus = this._jobQueueAppService.GetAllJobQueueusAsync().GetAwaiter().GetResult();
-            return job_queueus.Where(u => u.Queue == queue).Aggregate(0, (t, next) =>
+            var job_queueus = this._jobQueueAppService.GetQueuesAsync(queue).GetAwaiter().GetResult();
+            return job_queueus.Aggregate(0, (t, next) =>
             {
                 if (next.FetchedAt == null) return ++t;
                 return 0;
