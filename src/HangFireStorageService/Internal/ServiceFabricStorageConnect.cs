@@ -18,6 +18,7 @@ namespace HangFireStorageService.Internal
 
         private readonly IJobDataService _jobDataService;
         private readonly IJobAppService _jobAppService;
+        private readonly IJobQueueAppService _jobQueueAppService;
         private readonly IJobStateDataAppService _jobStateDataAppService;
         private readonly IServerAppService _serverAppService;
         private readonly IJobSetAppService _jobSetsAppService;
@@ -29,7 +30,8 @@ namespace HangFireStorageService.Internal
             IJobStateDataAppService jobStateDataAppService,
             IServerAppService serverAppService,
             IJobSetAppService setsAppService,
-            IHashAppService hashAppService
+            IHashAppService hashAppService,
+            IJobQueueAppService jobQueueAppService
             )
         {
             this._jobDataService = jobDataService;
@@ -38,6 +40,7 @@ namespace HangFireStorageService.Internal
             this._serverAppService = serverAppService;
             this._jobSetsAppService = setsAppService;
             this._hashAppService = hashAppService;
+            this._jobQueueAppService = jobQueueAppService;
         }
 
         public void Dispose()
@@ -60,7 +63,6 @@ namespace HangFireStorageService.Internal
         {
             var invocationData = InvocationData.SerializeJob(job);
             var playload = invocationData.SerializePayload(true);
-            var parametersArrary = parameters.ToArray();
             var jobDto = new JobDto()
             {
                 Id = 0,//ID需要后续处理一下,
@@ -78,7 +80,7 @@ namespace HangFireStorageService.Internal
 
         public IFetchedJob FetchNextJob(string[] queues, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return new ServiceFabricTransactionJob(queues, cancellationToken, this._jobQueueAppService);
         }
 
         public void SetJobParameter(string id, string name, string value)

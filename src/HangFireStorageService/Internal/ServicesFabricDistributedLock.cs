@@ -41,7 +41,7 @@ namespace HangFireStorageService.Internal
                             this._lockedResources.Remove(this._resourceName))
                         {
                             //Remove it from Service Fabric
-                            await this._simpleKeyValueService.Remove("", this._resourceName);
+                            //await this._simpleKeyValueService.Remove("", this._resourceName);
                         }
                     }
                 }
@@ -59,7 +59,7 @@ namespace HangFireStorageService.Internal
             {
                 try
                 {
-                    await this._simpleKeyValueService.Add("", this._resourceName, "");
+                    //await this._simpleKeyValueService.Add("", this._resourceName, "");
                 }
                 catch (Exception)
                 {

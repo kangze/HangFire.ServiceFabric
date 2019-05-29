@@ -12,5 +12,7 @@ namespace HangFireStorageService.Extensions
         /// 服务名称的前缀
         /// </summary>
         public string Prefix { get; set; } = "Default";
+
+        public string ApplicationUri { get; set; }
     }
 }

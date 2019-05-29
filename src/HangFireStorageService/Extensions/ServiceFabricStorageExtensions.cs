@@ -1,5 +1,6 @@
 ﻿using Hangfire;
 using Hangfire.Annotations;
+using HangFireStorageService.Internal;
 using HangFireStorageService.Servces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.ServiceFabric.Data;
@@ -19,8 +20,9 @@ namespace HangFireStorageService.Extensions
             [NotNull] this IGlobalConfiguration configuration,
             [NotNull] ServiceFabricOptions options)
         {
-            if (options == null) options = new ServiceFabricOptions();
-            var storage = new ServiceFabricStorage();
+            if (options == null)
+                throw new ArgumentException(nameof(options));
+            var storage = ServiceFabricStorage.Create(options);
             return configuration.UseStorage(storage);
         }
 
@@ -36,7 +38,7 @@ namespace HangFireStorageService.Extensions
                 new ServiceReplicaListener((c) =>
                      new FabricTransportServiceRemotingListener(c, new JobAppService(stateManager,options)) , Constants.ListenerNames_JobAppService),
                 new ServiceReplicaListener((c) =>
-                     new FabricTransportServiceRemotingListener(c, new JobQueueuAppService(stateManager,options)) , Constants.ListenerNames_JobAppService),
+                     new FabricTransportServiceRemotingListener(c, new JobQueueuAppService(stateManager,options)) , Constants.ListenerNames_JobQueueAppService),
                 new ServiceReplicaListener((c) =>
                      new FabricTransportServiceRemotingListener(c, new JobStateDataAppService(stateManager)) , Constants.ListenerNames_JobStateDataAppService),
                 new ServiceReplicaListener((c) =>
@@ -51,7 +53,7 @@ namespace HangFireStorageService.Extensions
                      new FabricTransportServiceRemotingListener(c, new JobDataService(stateManager)) , Constants.ListenerNames_JobDataService),
                 new ServiceReplicaListener((c) =>
                      new FabricTransportServiceRemotingListener(c, new HashAppService(stateManager)) , Constants.ListenerNames_HashAppService)
-        };
+            };
         }
     }
 }

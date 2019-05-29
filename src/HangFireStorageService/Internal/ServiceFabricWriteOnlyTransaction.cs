@@ -116,7 +116,7 @@ namespace HangFireStorageService.Internal
 
         public override void RemoveFromSet(string key, string value)
         {
-            throw new NotImplementedException();
+           throw new NotImplementedException();
         }
 
         public override void InsertToList(string key, string value)

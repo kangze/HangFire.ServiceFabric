@@ -14,7 +14,7 @@ namespace HangFireStorageService.Extensions
         public const string ListenerNames_ServerAppService = "ServerAppService";
         public const string ListenerNames_CounterAppService = "CounterAppService";
         public const string ListenerNames_AggregatedCounterAppService = "AggregatedCounterAppService";
-        public const string ListenerNames_JobSetAppService = "IJobSetAppService";
+        public const string ListenerNames_JobSetAppService = "JobSetAppService";
         public const string ListenerNames_JobDataService = "JobDataService";
         public const string ListenerNames_HashAppService = "HashAppService";
     }

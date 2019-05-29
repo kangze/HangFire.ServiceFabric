@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Hangfire;
 using Hangfire.Storage;
+using HangFireStorageService.Extensions;
 using HangFireStorageService.Servces;
 
 namespace HangFireStorageService.Internal
@@ -21,7 +22,7 @@ namespace HangFireStorageService.Internal
         private readonly IJobDataService _jobDataService;
         private readonly IHashAppService _hashAppService;
 
-        public ServiceFabricStorage(
+        private ServiceFabricStorage(
             IJobQueueAppService jobQueueAppService,
             IJobAppService jobAppService,
             IJobStateDataAppService jobStateDataAppService,
@@ -44,6 +45,30 @@ namespace HangFireStorageService.Internal
             this._hashAppService = hashAppService;
         }
 
+        internal static ServiceFabricStorage Create(ServiceFabricOptions option)
+        {
+            RemotingClient.ApplicationUri = option.ApplicationUri;
+            var jobQueueAppService = RemotingClient.CreateJobQueueAppService();
+            var jobAppService = RemotingClient.CreateJobAppService();
+            var jobStateDataAppService = RemotingClient.CreateJobStateDataAppService();
+            var serverAppService = RemotingClient.CreateServiceAppService();
+            var counterAppService = RemotingClient.CreateCounterAppService();
+            var jobSetAppService = RemotingClient.CreateJobSetAppService();
+            var jobDataAppService = RemotingClient.CreateJobDataService();
+            var hashAppService = RemotingClient.CreateHashAppService();
+            var aggregatedAppService = RemotingClient.CreateAggregateCounterAppService();
+            return new ServiceFabricStorage(
+                jobQueueAppService,
+                jobAppService,
+                jobStateDataAppService,
+                serverAppService,
+                counterAppService,
+                aggregatedAppService,
+                jobSetAppService,
+                jobDataAppService,
+                hashAppService);
+        }
+
 
         public override IMonitoringApi GetMonitoringApi()
         {
@@ -52,7 +77,7 @@ namespace HangFireStorageService.Internal
 
         public override IStorageConnection GetConnection()
         {
-            return new ServiceFabricStorageConnect(this._jobDataService, this._jobAppService, this._jobStateDataAppService, this._serverAppService, this._jobSetAppService, this._hashAppService);
+            return new ServiceFabricStorageConnect(this._jobDataService, this._jobAppService, this._jobStateDataAppService, this._serverAppService, this._jobSetAppService, this._hashAppService, this._jobQueueAppService);
         }
     }
 }
