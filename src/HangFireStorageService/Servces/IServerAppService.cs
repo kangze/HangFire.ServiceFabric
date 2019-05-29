@@ -1,5 +1,6 @@
 ﻿using Hangfire.Storage.Monitoring;
 using HangFireStorageService.Dto;
+using Microsoft.ServiceFabric.Services.Remoting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace HangFireStorageService.Servces
 {
-    public interface IServerAppService
+    public interface IServerAppService:IService
     {
-        Task AddOrUpdateAsync(string serverId, string data, DateTimeOffset heartBeat);
+        Task AddOrUpdateAsync(string serverId, string data, DateTime heartBeat);
 
         Task<ServerDtos> GetServerAsync(string serverId);
 

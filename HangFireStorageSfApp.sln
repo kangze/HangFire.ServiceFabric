@@ -1,13 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.572
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.452
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{A07B5EB6-E848-4116-A8D0-A826331D98C6}") = "HangFireStorageSfApp", "HangFireStorageSfApp\HangFireStorageSfApp.sfproj", "{2EF78521-05B1-4FBA-99FE-CD2F4CCBDB7A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HangFireStorageService", "src\HangFireStorageService\HangFireStorageService.csproj", "{C4BD3C69-F6F8-4A09-BCA2-8B39B883B956}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HangFireStorageService", "src\HangFireStorageService\HangFireStorageService.csproj", "{C4BD3C69-F6F8-4A09-BCA2-8B39B883B956}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HangFire.ServiceFabric", "src\HangFire.ServiceFabric\HangFire.ServiceFabric.csproj", "{C1594E57-3802-4933-92AD-6E8A78169E15}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HangFire.ServiceFabric", "src\HangFire.ServiceFabric\HangFire.ServiceFabric.csproj", "{C1594E57-3802-4933-92AD-6E8A78169E15}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,14 +15,6 @@ Global
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{2EF78521-05B1-4FBA-99FE-CD2F4CCBDB7A}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{2EF78521-05B1-4FBA-99FE-CD2F4CCBDB7A}.Debug|x64.ActiveCfg = Debug|x64
-		{2EF78521-05B1-4FBA-99FE-CD2F4CCBDB7A}.Debug|x64.Build.0 = Debug|x64
-		{2EF78521-05B1-4FBA-99FE-CD2F4CCBDB7A}.Debug|x64.Deploy.0 = Debug|x64
-		{2EF78521-05B1-4FBA-99FE-CD2F4CCBDB7A}.Release|Any CPU.ActiveCfg = Release|x64
-		{2EF78521-05B1-4FBA-99FE-CD2F4CCBDB7A}.Release|x64.ActiveCfg = Release|x64
-		{2EF78521-05B1-4FBA-99FE-CD2F4CCBDB7A}.Release|x64.Build.0 = Release|x64
-		{2EF78521-05B1-4FBA-99FE-CD2F4CCBDB7A}.Release|x64.Deploy.0 = Release|x64
 		{C4BD3C69-F6F8-4A09-BCA2-8B39B883B956}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C4BD3C69-F6F8-4A09-BCA2-8B39B883B956}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C4BD3C69-F6F8-4A09-BCA2-8B39B883B956}.Debug|x64.ActiveCfg = Debug|Any CPU

@@ -14,7 +14,6 @@ namespace HangFireStorageService.Internal
 {
     public class ServiceFabricMonitoringApi : IMonitoringApi
     {
-        private readonly ServiceFabricStorage _storage;
         private readonly IJobQueueAppService _jobQueueAppService;
         private readonly IJobAppService _jobAppService;
         private readonly IJobStateDataAppService _jobStateDataAppService;
@@ -23,7 +22,7 @@ namespace HangFireStorageService.Internal
         private readonly IAggregatedCounterAppService _aggregatedCounterAppService;
         private readonly IJobSetAppService _jobSetAppService;
 
-        public ServiceFabricMonitoringApi(ServiceFabricStorage storage,
+        public ServiceFabricMonitoringApi(
             IJobQueueAppService jobQueueAppService,
             IJobAppService jobAppService,
             IJobStateDataAppService jobStateDataAppService,
@@ -33,12 +32,12 @@ namespace HangFireStorageService.Internal
             IJobSetAppService jobSetAppService
             )
         {
-            this._storage = storage;
             this._jobQueueAppService = jobQueueAppService;
             this._serverAppService = serverAppService;
             this._counterAppService = counterAppService;
             this._aggregatedCounterAppService = aggregatedCounterAppService;
             this._jobSetAppService = jobSetAppService;
+            this._jobStateDataAppService = jobStateDataAppService;
         }
 
         public IList<QueueWithTopEnqueuedJobsDto> Queues()
@@ -321,8 +320,8 @@ namespace HangFireStorageService.Internal
 
         public long FetchedCount(string queue)
         {
-            var job_queueus = this._jobQueueAppService.GetAllJobQueueusAsync().GetAwaiter().GetResult();
-            return job_queueus.Where(u => u.Queue == queue).Aggregate(0, (t, next) =>
+            var job_queueus = this._jobQueueAppService.GetQueuesAsync(queue).GetAwaiter().GetResult();
+            return job_queueus.Aggregate(0, (t, next) =>
             {
                 if (next.FetchedAt != null) return ++t;
                 return 0;

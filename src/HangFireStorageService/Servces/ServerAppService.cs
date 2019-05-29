@@ -19,7 +19,7 @@ namespace HangFireStorageService.Servces
             this._stateManager = stateManager;
         }
 
-        public async Task AddOrUpdateAsync(string serverId, string data, DateTimeOffset heartBeat)
+        public async Task AddOrUpdateAsync(string serverId, string data, DateTime heartBeat)
         {
             if (string.IsNullOrEmpty(serverId))
                 throw new ArgumentNullException(nameof(serverId));

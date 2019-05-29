@@ -1,4 +1,5 @@
 ﻿using HangFireStorageService.Dto;
+using Microsoft.ServiceFabric.Services.Remoting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace HangFireStorageService.Servces
 {
-    public interface IJobStateDataAppService
+    public interface IJobStateDataAppService:IService
     {
         Task<StateDto> GetLatestJobStateDataAsync(long jobId);
 
