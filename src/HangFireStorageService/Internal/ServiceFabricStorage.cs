@@ -21,6 +21,7 @@ namespace HangFireStorageService.Internal
         private readonly IJobSetAppService _jobSetAppService;
         private readonly IJobDataService _jobDataService;
         private readonly IHashAppService _hashAppService;
+        private readonly IJobListAppService _jobListAppService;
 
         private ServiceFabricStorage(
             IJobQueueAppService jobQueueAppService,
@@ -31,7 +32,8 @@ namespace HangFireStorageService.Internal
             IAggregatedCounterAppService aggregatedCounterAppService,
             IJobSetAppService jobSetAppService,
             IJobDataService jobDataService,
-            IHashAppService hashAppService
+            IHashAppService hashAppService,
+            IJobListAppService jobListAppService
             )
         {
             this._jobQueueAppService = jobQueueAppService;
@@ -43,6 +45,7 @@ namespace HangFireStorageService.Internal
             this._jobAppService = jobAppService;
             this._jobDataService = jobDataService;
             this._hashAppService = hashAppService;
+            this._jobListAppService = jobListAppService;
         }
 
         internal static ServiceFabricStorage Create(ServiceFabricOptions option)
@@ -57,6 +60,7 @@ namespace HangFireStorageService.Internal
             var jobDataAppService = RemotingClient.CreateJobDataService();
             var hashAppService = RemotingClient.CreateHashAppService();
             var aggregatedAppService = RemotingClient.CreateAggregateCounterAppService();
+            var jobListAppService = RemotingClient.CreateJobListAppService();
             return new ServiceFabricStorage(
                 jobQueueAppService,
                 jobAppService,
@@ -66,7 +70,8 @@ namespace HangFireStorageService.Internal
                 aggregatedAppService,
                 jobSetAppService,
                 jobDataAppService,
-                hashAppService);
+                hashAppService,
+                jobListAppService);
         }
 
 
@@ -77,7 +82,7 @@ namespace HangFireStorageService.Internal
 
         public override IStorageConnection GetConnection()
         {
-            return new ServiceFabricStorageConnect(this._jobDataService, this._jobAppService, this._jobStateDataAppService, this._serverAppService, this._jobSetAppService, this._hashAppService, this._jobQueueAppService);
+            return new ServiceFabricStorageConnect(this._jobDataService, this._jobAppService, this._jobStateDataAppService, this._serverAppService, this._jobSetAppService, this._hashAppService, this._jobQueueAppService, this._counterAppService, this._aggregatedCounterAppService, this._jobListAppService);
         }
     }
 }

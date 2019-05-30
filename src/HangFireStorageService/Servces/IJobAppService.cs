@@ -21,6 +21,8 @@ namespace HangFireStorageService.Servces
 
         Task<List<JobDetail>> GetJobDetailsAsync(long[] jobIds);
 
+        Task SetJobStateAsync(long jobId, StateDto state);
+
 
     }
 }

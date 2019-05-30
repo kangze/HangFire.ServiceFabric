@@ -11,5 +11,9 @@ namespace HangFireStorageService.Servces
     public interface ICounterAppService : IService
     {
         Task<List<CounterDto>> GetAllCounterAsync();
+
+        Task AddAsync(string key, TimeSpan? expireIn);
+
+        Task DeleteAsync(string key, TimeSpan? expireIn);
     }
 }

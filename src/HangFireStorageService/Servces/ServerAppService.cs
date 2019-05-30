@@ -47,6 +47,8 @@ namespace HangFireStorageService.Servces
                     };
                     await server_dict.TryAddAsync(tx, serverId, serverDto);
                 }
+
+                await tx.CommitAsync();
             }
 
 

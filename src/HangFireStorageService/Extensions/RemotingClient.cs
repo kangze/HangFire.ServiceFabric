@@ -77,5 +77,11 @@ namespace HangFireStorageService.Extensions
             var uri = new Uri(ApplicationUri);
             return proxyFactory.CreateServiceProxy<IHashAppService>(uri, listenerName: Constants.ListenerNames_HashAppService);
         }
+
+        public static IJobListAppService CreateJobListAppService()
+        {
+            var uri = new Uri(ApplicationUri);
+            return proxyFactory.CreateServiceProxy<IJobListAppService>(uri, listenerName: Constants.ListenerNames_jobListAppSerivce);
+        }
     }
 }

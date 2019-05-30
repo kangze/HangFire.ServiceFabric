@@ -18,6 +18,32 @@ namespace HangFireStorageService.Servces
             this._stateManager = stateManager;
         }
 
+        public async Task AddSetAsync(string key, string value, double score)
+        {
+            var set_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, SetDto>>(Consts.SET_DICT);
+            using (var tx = this._stateManager.CreateTransaction())
+            {
+                var set_condition = await set_dict.TryGetValueAsync(tx, key);
+                if (set_condition.HasValue)
+                {
+                    set_condition.Value.Score = score;
+                    await set_dict.SetAsync(tx, key, set_condition.Value);
+                    await tx.CommitAsync();
+                }
+                else
+                {
+                    await set_dict.SetAsync(tx, key, new SetDto()
+                    {
+                        Key = key,
+                        Value = value,
+                        Score = score
+                    });
+                    await tx.CommitAsync();
+                }
+            }
+
+        }
+
         public async Task<List<SetDto>> GetAllSetsAsync()
         {
             var set_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, SetDto>>(Consts.SET_DICT);
@@ -33,6 +59,15 @@ namespace HangFireStorageService.Servces
             return ls;
         }
 
-        
+        public async Task RemoveAsync(string key, string value)
+        {
+            var set_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, SetDto>>(Consts.SET_DICT);
+            var ls = new List<SetDto>();
+            using (var tx = this._stateManager.CreateTransaction())
+            {
+                await set_dict.TryRemoveAsync(tx, key);
+                await tx.CommitAsync();
+            }
+        }
     }
 }

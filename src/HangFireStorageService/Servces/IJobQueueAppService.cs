@@ -14,5 +14,7 @@ namespace HangFireStorageService.Servces
 
         Task DeleteQueueJobAsync(string queue, long jobId);
 
+        Task AddToQueueJObAsync(string queue, long jobId);
+
     }
 }

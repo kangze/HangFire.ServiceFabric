@@ -23,6 +23,9 @@ namespace HangFireStorageService.Internal
         private readonly IServerAppService _serverAppService;
         private readonly IJobSetAppService _jobSetsAppService;
         private readonly IHashAppService _hashAppService;
+        private readonly ICounterAppService _counterAppService;
+        private readonly IAggregatedCounterAppService _aggregatedCounterAppService;
+        private readonly IJobListAppService _jobListAppService;
 
         public ServiceFabricStorageConnect(
             IJobDataService jobDataService,
@@ -31,9 +34,14 @@ namespace HangFireStorageService.Internal
             IServerAppService serverAppService,
             IJobSetAppService setsAppService,
             IHashAppService hashAppService,
-            IJobQueueAppService jobQueueAppService
+            IJobQueueAppService jobQueueAppService,
+            ICounterAppService counterAppService,
+            IAggregatedCounterAppService aggregatedCounterAppService,
+            IJobListAppService jobListAppService
             )
         {
+            this._aggregatedCounterAppService = aggregatedCounterAppService;
+            this._counterAppService = counterAppService;
             this._jobDataService = jobDataService;
             this._jobAppService = jobAppService;
             this._jobStateDataAppService = jobStateDataAppService;
@@ -41,6 +49,7 @@ namespace HangFireStorageService.Internal
             this._jobSetsAppService = setsAppService;
             this._hashAppService = hashAppService;
             this._jobQueueAppService = jobQueueAppService;
+            this._jobListAppService = jobListAppService;
         }
 
         public void Dispose()
@@ -50,7 +59,7 @@ namespace HangFireStorageService.Internal
 
         public IWriteOnlyTransaction CreateWriteTransaction()
         {
-            return new ServiceFabricWriteOnlyTransaction(new List<OperationDto>(), new JobDataService(null));
+            return new ServiceFabricWriteOnlyTransaction(this._jobQueueAppService, this._jobAppService, this._jobStateDataAppService, this._serverAppService, this._counterAppService, this._aggregatedCounterAppService, this._jobSetsAppService, this._jobDataService, this._hashAppService, this._jobListAppService);
         }
 
         public IDisposable AcquireDistributedLock(string resource, TimeSpan timeout)

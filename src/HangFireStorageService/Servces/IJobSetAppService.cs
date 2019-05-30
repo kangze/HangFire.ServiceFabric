@@ -8,8 +8,13 @@ using System.Threading.Tasks;
 
 namespace HangFireStorageService.Servces
 {
-    public interface IJobSetAppService:IService
+    public interface IJobSetAppService : IService
     {
         Task<List<SetDto>> GetAllSetsAsync();
+
+        Task AddSetAsync(string key, string value, double score);
+
+        Task RemoveAsync(string key, string value);
+
     }
 }

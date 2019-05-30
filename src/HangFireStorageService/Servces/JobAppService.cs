@@ -132,5 +132,24 @@ namespace HangFireStorageService.Servces
             }
             return result;
         }
+
+        public async Task SetJobStateAsync(long jobId, StateDto state)
+        {
+            var stateDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, StateDto>>(Consts.STATE_DICT);
+            var job_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(string.Format(Consts.JOB_DICT, this._options.Prefix));
+            using (var tx = this._stateManager.CreateTransaction())
+            {
+                var job_condition = await job_dict.TryGetValueAsync(tx, jobId);
+                if (!job_condition.HasValue)
+                    return;
+                var count = stateDict.Count;
+                state.Id = count + 1;
+                job_condition.Value.StateId = state.Id;
+                job_condition.Value.StateName = state.Name;
+                await stateDict.SetAsync(tx, state.Id, state);
+                await job_dict.SetAsync(tx, jobId, job_condition.Value);
+                await tx.CommitAsync();
+            }
+        }
     }
 }

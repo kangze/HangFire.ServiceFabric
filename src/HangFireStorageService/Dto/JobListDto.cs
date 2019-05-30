@@ -6,13 +6,11 @@ using System.Threading.Tasks;
 
 namespace HangFireStorageService.Dto
 {
-    public class CounterDto
+    public class JobListDto
     {
-        public long Id { get; set; }
-
         public string Key { get; set; }
 
-        public int Value { get; set; }
+        public string Value { get; set; }
 
         public DateTime? ExpireAt { get; set; }
     }

@@ -17,5 +17,6 @@ namespace HangFireStorageService.Extensions
         public const string ListenerNames_JobSetAppService = "JobSetAppService";
         public const string ListenerNames_JobDataService = "JobDataService";
         public const string ListenerNames_HashAppService = "HashAppService";
+        public const string ListenerNames_jobListAppSerivce = "JobListAppService";
     }
 }

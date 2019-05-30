@@ -21,6 +21,24 @@ namespace HangFireStorageService.Servces
             this._options = options;
         }
 
+        public async Task AddToQueueJObAsync(string queue, long jobId)
+        {
+            var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, List<JobQueueDto>>>(string.Format(Consts.JOBQUEUE_DICT, this._options.Prefix));
+            using (var tx = this._stateManager.CreateTransaction())
+            {
+                var queues_condition = await queues_dict.TryGetValueAsync(tx, queue);
+                if (!queues_condition.HasValue)
+                    return;
+                queues_condition.Value.Add(new JobQueueDto()
+                {
+                    Queue = queue,
+                    JobId = jobId,
+                });
+                await queues_dict.SetAsync(tx, queue, queues_condition.Value);
+                await tx.CommitAsync();
+            }
+        }
+
         public async Task DeleteQueueJobAsync(string queue, long jobId)
         {
             var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, List<JobQueueDto>>>(string.Format(Consts.JOBQUEUE_DICT, this._options.Prefix));

@@ -55,6 +55,6 @@ namespace HangFireStorageService.Dto
 
         SetRangeInHash = 15,
 
-        RemoveHash = 15
+        RemoveHash = 16
     }
 }

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace HangFireStorageService.Servces
 {
-    public interface IJobStateDataAppService:IService
+    public interface IJobStateDataAppService : IService
     {
         Task<StateDto> GetLatestJobStateDataAsync(long jobId);
 
@@ -16,6 +16,9 @@ namespace HangFireStorageService.Servces
 
         Task<List<StateDto>> GetStates(long jobId);
 
-        
+        Task AddStateAsync(long jobId, StateDto state);
+
+
+
     }
 }

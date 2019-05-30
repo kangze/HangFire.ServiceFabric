@@ -63,5 +63,18 @@ namespace HangFireStorageService.Servces
                 return ls;
             }
         }
+
+        public async Task AddStateAsync(long jobId, StateDto state)
+        {
+            var stateDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, StateDto>>(Consts.STATE_DICT);
+            using (var tx = this._stateManager.CreateTransaction())
+            {
+                var count = await stateDict.GetCountAsync(tx);
+                state.Id = count + 1;
+                state.JobId = jobId;
+                await stateDict.SetAsync(tx, state.Id, state);
+                await tx.CommitAsync();
+            }
+        }
     }
 }
