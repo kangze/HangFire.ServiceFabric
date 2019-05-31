@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
+    <RootNamespace>Hangfire.ServiceFabric</RootNamespace>
+    <AssemblyName>Hangfire.ServiceFabric</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
