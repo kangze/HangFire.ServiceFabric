@@ -40,6 +40,7 @@ namespace HangFireStorageService.Servces
 
         public async Task<List<JobDto>> GetAllJobsAsync()
         {
+
             var ls = new List<JobDto>();
             var jobDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(string.Format(Consts.JOB_DICT, this._options.Prefix));
             using (var tx = this._stateManager.CreateTransaction())

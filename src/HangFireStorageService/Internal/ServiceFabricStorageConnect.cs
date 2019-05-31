@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Hangfire.Annotations;
 using Hangfire.Common;
 using Hangfire.Server;
 using Hangfire.Storage;
@@ -13,7 +14,7 @@ using Mcs.Common.BaseServices;
 
 namespace HangFireStorageService.Internal
 {
-    internal class ServiceFabricStorageConnect : IStorageConnection
+    internal class ServiceFabricStorageConnect : JobStorageConnection
     {
 
         private readonly IJobDataService _jobDataService;
@@ -52,23 +53,23 @@ namespace HangFireStorageService.Internal
             this._jobListAppService = jobListAppService;
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
 
         }
 
-        public IWriteOnlyTransaction CreateWriteTransaction()
+        public override IWriteOnlyTransaction CreateWriteTransaction()
         {
             return new ServiceFabricWriteOnlyTransaction(this._jobQueueAppService, this._jobAppService, this._jobStateDataAppService, this._serverAppService, this._counterAppService, this._aggregatedCounterAppService, this._jobSetsAppService, this._jobDataService, this._hashAppService, this._jobListAppService);
         }
 
-        public IDisposable AcquireDistributedLock(string resource, TimeSpan timeout)
+        public override IDisposable AcquireDistributedLock(string resource, TimeSpan timeout)
         {
             var locker = new ServicesFabricDistributedLock(null, resource, timeout);
             return locker.AcquireLock().GetAwaiter().GetResult();
         }
 
-        public string CreateExpiredJob(Job job, IDictionary<string, string> parameters, DateTime createdAt, TimeSpan expireIn)
+        public override string CreateExpiredJob(Job job, IDictionary<string, string> parameters, DateTime createdAt, TimeSpan expireIn)
         {
             var invocationData = InvocationData.SerializeJob(job);
             var playload = invocationData.SerializePayload(true);
@@ -87,12 +88,12 @@ namespace HangFireStorageService.Internal
             return jobDto.Id.ToString();
         }
 
-        public IFetchedJob FetchNextJob(string[] queues, CancellationToken cancellationToken)
+        public override IFetchedJob FetchNextJob(string[] queues, CancellationToken cancellationToken)
         {
             return new ServiceFabricTransactionJob(queues, cancellationToken, this._jobQueueAppService);
         }
 
-        public void SetJobParameter(string id, string name, string value)
+        public override void SetJobParameter(string id, string name, string value)
         {
             var job = this._jobAppService.GetJobAsync(long.Parse(id)).GetAwaiter().GetResult();
             if (job == null)
@@ -103,7 +104,7 @@ namespace HangFireStorageService.Internal
             this._jobAppService.UpdateJobAsync(job).GetAwaiter().GetResult();
         }
 
-        public string GetJobParameter(string id, string name)
+        public override string GetJobParameter(string id, string name)
         {
             var job = this._jobAppService.GetJobAsync(long.Parse(id)).GetAwaiter().GetResult();
             if (job == null)
@@ -113,9 +114,13 @@ namespace HangFireStorageService.Internal
 
         }
 
-        public JobData GetJobData(string jobId)
+        public override JobData GetJobData(string jobId)
         {
+            if (string.IsNullOrEmpty(jobId))
+                return null;
             var job = this._jobAppService.GetJobAsync(long.Parse(jobId)).GetAwaiter().GetResult();
+            if (job == null)
+                return null;
             var invocationData = InvocationData.DeserializePayload(job.InvocationData);
             var jobData = new JobData()
             {
@@ -127,7 +132,7 @@ namespace HangFireStorageService.Internal
             return jobData;
         }
 
-        public StateData GetStateData(string jobId)
+        public override StateData GetStateData(string jobId)
         {
             var stateData = this._jobStateDataAppService.GetLatestJobStateDataAsync(long.Parse(jobId)).GetAwaiter().GetResult();
             var data = new Dictionary<string, string>(SerializationHelper.Deserialize<Dictionary<string, string>>(stateData.Data), StringComparer.OrdinalIgnoreCase);
@@ -140,7 +145,7 @@ namespace HangFireStorageService.Internal
             };
         }
 
-        public void AnnounceServer(string serverId, ServerContext context)
+        public override void AnnounceServer(string serverId, ServerContext context)
         {
             var serverData = new ServerData()
             {
@@ -152,12 +157,12 @@ namespace HangFireStorageService.Internal
 
         }
 
-        public void RemoveServer(string serverId)
+        public override void RemoveServer(string serverId)
         {
             this._serverAppService.RemoveServer(serverId);
         }
 
-        public void Heartbeat(string serverId)
+        public override void Heartbeat(string serverId)
         {
             var server = this._serverAppService.GetServerAsync(serverId).GetAwaiter().GetResult();
             if (server == null)
@@ -165,7 +170,7 @@ namespace HangFireStorageService.Internal
             this._serverAppService.AddOrUpdateAsync(serverId, server.Data, DateTime.UtcNow);
         }
 
-        public int RemoveTimedOutServers(TimeSpan timeOut)
+        public override int RemoveTimedOutServers(TimeSpan timeOut)
         {
             if (timeOut.Duration() != timeOut)
             {
@@ -184,13 +189,13 @@ namespace HangFireStorageService.Internal
             return count;
         }
 
-        public HashSet<string> GetAllItemsFromSet(string key)
+        public override HashSet<string> GetAllItemsFromSet(string key)
         {
             var all_sets = this._jobSetsAppService.GetAllSetsAsync().GetAwaiter().GetResult();
             return all_sets.Where(u => u.Key == key).Select(u => u.Value).ToHashSet();
         }
 
-        public string GetFirstByLowestScoreFromSet(string key, double fromScore, double toScore)
+        public override string GetFirstByLowestScoreFromSet(string key, double fromScore, double toScore)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
             if (toScore < fromScore) throw new ArgumentException("The `toScore` value must be higher or equal to the `fromScore` value.", nameof(toScore));
@@ -200,16 +205,76 @@ namespace HangFireStorageService.Internal
             return firtst_set == null ? "" : firtst_set.Value;
         }
 
-        public void SetRangeInHash(string key, IEnumerable<KeyValuePair<string, string>> keyValuePairs)
+        public override void SetRangeInHash(string key, IEnumerable<KeyValuePair<string, string>> keyValuePairs)
         {
             //normal,there must exited a blocked it
             this._hashAppService.AddOrUpdateAsync(key, keyValuePairs.ToDictionary(u => u.Key, u => u.Value)).GetAwaiter().GetResult();
         }
 
-        public Dictionary<string, string> GetAllEntriesFromHash(string key)
+        public override Dictionary<string, string> GetAllEntriesFromHash(string key)
         {
             var all_hash = this._hashAppService.GetAllHashAsync().GetAwaiter().GetResult();
             return all_hash.Where(u => u.Key == key).ToDictionary(u => u.Field, u => u.Value);
+        }
+
+        public override long GetCounter([NotNull] string key)
+        {
+            return 0;
+        }
+
+        public override long GetSetCount([NotNull] string key)
+        {
+            return 0;
+        }
+
+        public override List<string> GetRangeFromList([NotNull] string key, int startingFrom, int endingAt)
+        {
+            return new List<string>();
+        }
+
+        public override long GetHashCount([NotNull] string key)
+        {
+            return 0;
+        }
+
+        public override List<string> GetAllItemsFromList([NotNull] string key)
+        {
+            return new List<string>();
+        }
+
+        public override List<string> GetFirstByLowestScoreFromSet(string key, double fromScore, double toScore, int count)
+        {
+            return new List<string>();
+        }
+
+        public override TimeSpan GetHashTtl([NotNull] string key)
+        {
+            return TimeSpan.FromSeconds(1);
+        }
+
+        public override long GetListCount([NotNull] string key)
+        {
+            return 0;
+        }
+
+        public override List<string> GetRangeFromSet([NotNull] string key, int startingFrom, int endingAt)
+        {
+            return base.GetRangeFromSet(key, startingFrom, endingAt);
+        }
+
+        public override TimeSpan GetListTtl([NotNull] string key)
+        {
+            return base.GetListTtl(key);
+        }
+
+        public override TimeSpan GetSetTtl([NotNull] string key)
+        {
+            return base.GetSetTtl(key);
+        }
+
+        public override string GetValueFromHash([NotNull] string key, [NotNull] string name)
+        {
+            return base.GetValueFromHash(key, name);
         }
     }
 }

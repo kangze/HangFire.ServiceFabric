@@ -38,6 +38,7 @@ namespace HangFireStorageService.Internal
             this._aggregatedCounterAppService = aggregatedCounterAppService;
             this._jobSetAppService = jobSetAppService;
             this._jobStateDataAppService = jobStateDataAppService;
+            this._jobAppService = jobAppService;
         }
 
         public IList<QueueWithTopEnqueuedJobsDto> Queues()

@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\Users\kangze\source\repos\Hangfire\src\Hangfire.SqlServer\Hangfire.SqlServer.csproj" />
     <ProjectReference Include="..\..\src\HangFireStorageService\HangFireStorageService.csproj" />
   </ItemGroup>
 

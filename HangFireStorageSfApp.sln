@@ -11,9 +11,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{0BBF
 EndProject
 Project("{A07B5EB6-E848-4116-A8D0-A826331D98C6}") = "ServiceFabricHangFireStorageHost", "samples\ServiceFabricHangFireStorageHost\ServiceFabricHangFireStorageHost.sfproj", "{69E84153-2CCE-402D-81AC-5A9D81054C67}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HangFireStorageHost", "samples\HangFireStorageHost\HangFireStorageHost.csproj", "{03A6A747-6F75-4792-ABF2-F1B02ECEE80A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HangFireStorageHost", "samples\HangFireStorageHost\HangFireStorageHost.csproj", "{03A6A747-6F75-4792-ABF2-F1B02ECEE80A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceFabricStorage.AspNetCoreSample", "sample\ServiceFabricStorage.AspNetCoreSample\ServiceFabricStorage.AspNetCoreSample.csproj", "{E62D9A5B-D486-4B11-A1FA-1EEB8E470626}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceFabricStorage.AspNetCoreSample", "sample\ServiceFabricStorage.AspNetCoreSample\ServiceFabricStorage.AspNetCoreSample.csproj", "{E62D9A5B-D486-4B11-A1FA-1EEB8E470626}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

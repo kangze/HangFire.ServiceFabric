@@ -33,6 +33,7 @@ namespace ServiceFabricStorage.AspNetCoreSample
                 Prefix = "Test",
                 ApplicationUri = "fabric:/ServiceFabricHangFireStorageHost/HangFireStorageHost"
             }));
+            //services.AddHangfire(x => x.UseSqlServerStorage(@"Data Source=(local)\SQLEXPRESS;Initial Catalog=Test;Integrated Security=True;MultipleActiveResultSets=true"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

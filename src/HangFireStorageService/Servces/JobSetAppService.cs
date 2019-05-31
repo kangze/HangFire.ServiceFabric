@@ -46,7 +46,7 @@ namespace HangFireStorageService.Servces
 
         public async Task<List<SetDto>> GetAllSetsAsync()
         {
-            var set_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, SetDto>>(Consts.SET_DICT);
+            var set_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, SetDto>>(Consts.SET_DICT);
             var ls = new List<SetDto>();
             using (var tx = this._stateManager.CreateTransaction())
             {

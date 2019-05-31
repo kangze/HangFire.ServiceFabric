@@ -15,7 +15,8 @@ namespace ServiceFabricStorage.AspNetCoreSample.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<string>> Get()
         {
-            RecurringJob.AddOrUpdate("111",() => System.Diagnostics.Debug.Write("Hello,World"), Cron.Minutely());
+            var s = new List<string>();
+            RecurringJob.AddOrUpdate("111", () => s.Sort(), Cron.Minutely());
             return new List<string>() { "successs" };
         }
 
