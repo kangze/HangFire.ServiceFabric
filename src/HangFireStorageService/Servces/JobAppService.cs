@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
+using Hangfire.ServiceFabric.Dtos;
+using Hangfire.ServiceFabric.Entities;
+using Hangfire.ServiceFabric.Servces;
 using HangFireStorageService.Dto;
 using HangFireStorageService.Extensions;
 using Microsoft.ServiceFabric.Data;
@@ -10,145 +14,115 @@ using Microsoft.ServiceFabric.Data.Collections;
 
 namespace HangFireStorageService.Servces
 {
-    public class JobAppService : IJobAppService
+    public class JobAppService : HangfireDataBaseService, IJobAppService
     {
-        private readonly IReliableStateManager _stateManager;
-        private readonly ServiceFabricOptions _options;
 
-        public JobAppService(IReliableStateManager stateManager, ServiceFabricOptions options)
+        public JobAppService(IReliableStateManager stateManager, ServiceFabricOptions options, IMapper mapper)
+            : base(stateManager, options, mapper)
         {
-            this._stateManager = stateManager;
-            this._options = options;
+
         }
 
 
-        public async Task<JobDto> AddJobAsync(JobDto job)
+        public async Task<JobDto> AddOrUpdateAsync(JobDto jobDto)
         {
-            if (job == null)
-                throw new ArgumentNullException(nameof(job));
-            var jobDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(string.Format(Consts.JOB_DICT, this._options.Prefix));
+            if (jobDto == null)
+                throw new ArgumentNullException(nameof(jobDto));
+            if (jobDto.Id == default)
+                jobDto.Id = Guid.NewGuid().ToString();
+            var job = this._mapper.Map<JobEntity>(jobDto);
+            await this.InitDictAsync();
             using (var tx = this._stateManager.CreateTransaction())
             {
-                var count = await jobDict.GetCountAsync(tx);
-                count++;
-                job.Id = count;
-                await jobDict.AddAsync(tx, job.Id, job);
+                await this._job_dict.SetAsync(tx, job.Id, job);
                 await tx.CommitAsync();
+                return jobDto;
             }
-            return job;
         }
 
-        public async Task<List<JobDto>> GetAllJobsAsync()
+        public async Task<List<JobDto>> GetJobsAsync(string JobId)
         {
-
-            var ls = new List<JobDto>();
-            var jobDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(string.Format(Consts.JOB_DICT, this._options.Prefix));
+            await this.InitDictAsync();
             using (var tx = this._stateManager.CreateTransaction())
             {
-                var emulator = (await jobDict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+                var ls = new List<JobDto>();
+                var emulator = (await this._job_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
                 while (await emulator.MoveNextAsync(default))
                 {
-                    ls.Add(emulator.Current.Value);
+                    var jobDto = this._mapper.Map<JobDto>(emulator.Current.Value);
+                    if (!string.IsNullOrEmpty(JobId) && jobDto.Id == JobId)
+                    {
+                        ls.Add(jobDto);
+                        return ls;
+                    }
+                    else if (string.IsNullOrEmpty(JobId))
+                    {
+                        ls.Add(jobDto);
+                    }
                 }
                 return ls;
             }
         }
 
-        public async Task<int> GetNumberbyStateName(string stateName)
+        public async Task<List<JobDto>> GetJobsByStateNameAsync(string stateName)
         {
-            var jobDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(string.Format(Consts.JOB_DICT, this._options.Prefix));
+            await this.InitDictAsync();
             using (var tx = this._stateManager.CreateTransaction())
             {
-                var count = 0;
-                var enumlator = (await jobDict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+                var ls = new List<JobDto>();
+                var enumlator = (await this._job_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
                 while (await enumlator.MoveNextAsync(default))
                 {
                     if (enumlator.Current.Value.StateName == stateName)
-                        ++count;
+                        ls.Add(this._mapper.Map<JobDto>(enumlator.Current.Value));
                 }
-                return count;
+                return ls;
             }
         }
 
-        public async Task<JobDto> GetJobAsync(long JobId)
+        public async Task<List<JobDto>> GetJobDetailsAsync(string[] jobIds)
         {
-            var jobDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(string.Format(Consts.JOB_DICT, this._options.Prefix));
-            using (var tx = this._stateManager.CreateTransaction())
-            {
-                var job_condition = await jobDict.TryGetValueAsync(tx, JobId);
-                if (job_condition.HasValue)
-                    return job_condition.Value;
-                return null;
-            }
-        }
-
-        public async Task UpdateJobAsync(JobDto job)
-        {
-            if (job == null)
-                throw new ArgumentNullException(nameof(job));
-            var jobDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(Consts.JOB_DICT);
-            using (var tx = this._stateManager.CreateTransaction())
-            {
-                await jobDict.SetAsync(tx, job.Id, job);
-                await tx.CommitAsync();
-            }
-        }
-
-        public async Task<List<JobDetail>> GetJobDetailsAsync(long[] jobIds)
-        {
-            var job_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(string.Format(Consts.JOB_DICT, this._options.Prefix));
-            var state_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, StateDto>>(string.Format(Consts.STATE_DICT, this._options.Prefix));
-            var result = new List<JobDetail>();
+            var result = new List<JobDto>();
+            await this.InitDictAsync();
             using (var tx = this._stateManager.CreateTransaction())
             {
                 foreach (var jobId in jobIds)
                 {
-                    var job_condition = await job_dict.TryGetValueAsync(tx, jobId);
+                    var job_condition = await this._job_dict.TryGetValueAsync(tx, jobId);
                     if (job_condition.HasValue)
                     {
-                        var jobDetail = new JobDetail()
-                        {
-                            Id = job_condition.Value.Id,
-                            InvocationData = job_condition.Value.InvocationData,
-                            Arguments = job_condition.Value.Arguments,
-                            CreateAt = job_condition.Value.CreatedAt,
-                            ExpireAt = job_condition.Value.ExpireAt,
-                            StateName = job_condition.Value.StateName,
-                            StateId = job_condition.Value.StateId
-                        };
-                        var state_condition = await state_dict.TryGetValueAsync(tx, job_condition.Value.StateId);
+                        var jobDto = this._mapper.Map<JobDto>(job_condition.Value);
+                        var state_condition = await this._state_dict.TryGetValueAsync(tx, job_condition.Value.StateId);
                         if (state_condition.HasValue)
                         {
-                            jobDetail.Reason = state_condition.Value.Reason;
-                            jobDetail.StateData = state_condition.Value.Data;
-                            jobDetail.StateChanged = state_condition.Value.CreatedAt;
+                            jobDto.Reason = state_condition.Value.Reason;
+                            jobDto.StateData = state_condition.Value.Data;
+                            jobDto.StateChanged = state_condition.Value.CreatedAt;
                         }
-                        result.Add(jobDetail);
+                        result.Add(jobDto);
                     }
                     else
                     {
-                        result.Add(new JobDetail() { Id = jobId });
+                        result.Add(new JobDto() { Id = jobId });
                     }
                 }
             }
             return result;
         }
 
-        public async Task SetJobStateAsync(long jobId, StateDto state)
+        public async Task AddJobStateAsync(string jobId, StateDto state)
         {
-            var stateDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, StateDto>>(Consts.STATE_DICT);
-            var job_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, JobDto>>(string.Format(Consts.JOB_DICT, this._options.Prefix));
+            await this.InitDictAsync();
             using (var tx = this._stateManager.CreateTransaction())
             {
-                var job_condition = await job_dict.TryGetValueAsync(tx, jobId);
+                var job_condition = await this._job_dict.TryGetValueAsync(tx, jobId);
                 if (!job_condition.HasValue)
                     return;
-                var count = stateDict.Count;
-                state.Id = count + 1;
+                state.Id = Guid.NewGuid().ToString();
                 job_condition.Value.StateId = state.Id;
                 job_condition.Value.StateName = state.Name;
-                await stateDict.SetAsync(tx, state.Id, state);
-                await job_dict.SetAsync(tx, jobId, job_condition.Value);
+                await this._state_dict.SetAsync(tx, state.Id, state);
+                await this._job_dict.SetAsync(tx, jobId, job_condition.Value);
                 await tx.CommitAsync();
             }
         }

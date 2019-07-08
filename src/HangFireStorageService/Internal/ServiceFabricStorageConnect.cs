@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Hangfire.Annotations;
 using Hangfire.Common;
 using Hangfire.Server;
+using Hangfire.ServiceFabric.Dtos;
 using Hangfire.Storage;
 using HangFireStorageService.Dto;
 using HangFireStorageService.Servces;
@@ -71,11 +72,11 @@ namespace HangFireStorageService.Internal
 
         public override string CreateExpiredJob(Job job, IDictionary<string, string> parameters, DateTime createdAt, TimeSpan expireIn)
         {
+
             var invocationData = InvocationData.SerializeJob(job);
             var playload = invocationData.SerializePayload(true);
             var jobDto = new JobDto()
             {
-                Id = 0,//ID需要后续处理一下,
                 InvocationData = playload,
                 Arguments = invocationData.Arguments,
                 CreatedAt = createdAt,
@@ -84,7 +85,7 @@ namespace HangFireStorageService.Internal
             };
             foreach (var pair in parameters)
                 jobDto.Parameters.Add(pair.Key, pair.Value);
-            jobDto = this._jobDataService.AddJobAsync(jobDto).GetAwaiter().GetResult();
+            jobDto = this._jobAppService.AddOrUpdateAsync(jobDto).GetAwaiter().GetResult();
             return jobDto.Id.ToString();
         }
 

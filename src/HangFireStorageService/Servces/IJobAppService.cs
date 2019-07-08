@@ -1,4 +1,5 @@
-﻿using HangFireStorageService.Dto;
+﻿using Hangfire.ServiceFabric.Dtos;
+using HangFireStorageService.Dto;
 using Microsoft.ServiceFabric.Services.Remoting;
 using System;
 using System.Collections.Generic;
@@ -9,19 +10,15 @@ namespace HangFireStorageService.Servces
 {
     public interface IJobAppService : IService
     {
-        Task<JobDto> AddJobAsync(JobDto job);
+        Task<JobDto> AddOrUpdateAsync(JobDto jobDto);
 
-        Task<JobDto> GetJobAsync(long JobId);
+        Task<List<JobDto>> GetJobsAsync(string JobId);
 
-        Task<List<JobDto>> GetAllJobsAsync();
+        Task<List<JobDto>> GetJobsByStateNameAsync(string stateName);
 
-        Task UpdateJobAsync(JobDto job);
+        Task<List<JobDto>> GetJobDetailsAsync(string[] jobIds);
 
-        Task<int> GetNumberbyStateName(string stateName);
-
-        Task<List<JobDetail>> GetJobDetailsAsync(long[] jobIds);
-
-        Task SetJobStateAsync(long jobId, StateDto state);
+        Task AddJobStateAsync(string jobId, StateDto state);
 
 
     }
