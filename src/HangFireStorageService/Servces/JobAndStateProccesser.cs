@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Hangfire.ServiceFabric.Dtos;
 using Hangfire.States;
 using HangFireStorageService.Dto;
 using Microsoft.ServiceFabric.Data;

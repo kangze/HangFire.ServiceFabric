@@ -96,7 +96,7 @@ namespace HangFireStorageService.Internal
 
         public override void SetJobParameter(string id, string name, string value)
         {
-            var job = this._jobAppService.GetJobAsync(long.Parse(id)).GetAwaiter().GetResult();
+            var job = this._jobAppService.GetJobAsync(id).GetAwaiter().GetResult();
             if (job == null)
                 throw new ArgumentNullException(string.Format("JobId:{0},Not Found", id));
             if (job.Parameters == null)

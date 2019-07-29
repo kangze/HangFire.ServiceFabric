@@ -40,7 +40,7 @@ namespace HangFireStorageService.Servces
             }
         }
 
-        public async Task<List<JobDto>> GetJobsAsync(string JobId)
+        public async Task<JobDto> GetJobAsync(string JobId)
         {
             await this.InitDictAsync();
             using (var tx = this._stateManager.CreateTransaction())
@@ -49,18 +49,10 @@ namespace HangFireStorageService.Servces
                 var emulator = (await this._job_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
                 while (await emulator.MoveNextAsync(default))
                 {
-                    var jobDto = this._mapper.Map<JobDto>(emulator.Current.Value);
-                    if (!string.IsNullOrEmpty(JobId) && jobDto.Id == JobId)
-                    {
-                        ls.Add(jobDto);
-                        return ls;
-                    }
-                    else if (string.IsNullOrEmpty(JobId))
-                    {
-                        ls.Add(jobDto);
-                    }
+                    if (emulator.Current.Value.Id == JobId)
+                        return this._mapper.Map<JobDto>(emulator.Current.Value);
                 }
-                return ls;
+                return null;
             }
         }
 
