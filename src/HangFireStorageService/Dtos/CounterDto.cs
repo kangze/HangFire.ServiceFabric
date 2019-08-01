@@ -12,7 +12,7 @@ namespace Hangfire.ServiceFabric.Dtos
 
         public string Key { get; set; }
 
-        public int Value { get; set; }
+        public long Value { get; set; }
 
         public DateTime? ExpireAt { get; set; }
     }

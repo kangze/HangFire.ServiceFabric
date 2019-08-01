@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Hangfire.ServiceFabric.Dtos;
 using Hangfire.ServiceFabric.Entities;
 using HangFireStorageService;
 using HangFireStorageService.Dto;
@@ -17,23 +18,21 @@ namespace Hangfire.ServiceFabric.Servces
     {
         protected readonly IReliableStateManager _stateManager;
         protected readonly ServiceFabricOptions _options;
-        protected readonly IMapper _mapper;
 
 
-        protected IReliableDictionary2<string, JobEntity> _job_dict;
+        protected IReliableDictionary2<string, JobDto> _job_dict;
         protected IReliableDictionary2<string, StateEntity> _state_dict;
 
 
-        public HangfireDataBaseService(IReliableStateManager stateManager, ServiceFabricOptions options, IMapper mapper)
+        public HangfireDataBaseService(IReliableStateManager stateManager, ServiceFabricOptions options)
         {
             this._stateManager = stateManager;
             this._options = options;
-            this._mapper = mapper;
         }
 
         protected async Task InitDictAsync()
         {
-            this._job_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobEntity>>(string.Format(Consts.JOB_DICT, this._options.Prefix));
+            this._job_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobDto>>(string.Format(Consts.JOB_DICT, this._options.Prefix));
             this._state_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, StateEntity>>(string.Format(Consts.STATE_DICT, this._options.Prefix));
         }
     }

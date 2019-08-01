@@ -11,7 +11,7 @@ namespace HangFireStorageService.Servces
 {
     public interface IJobSetAppService : IService
     {
-        Task<List<SetDto>> GetAllSetsAsync();
+        Task<List<SetDto>> GetSetsAsync();
 
         Task AddSetAsync(string key, string value, double score);
 

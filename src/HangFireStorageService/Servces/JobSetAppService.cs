@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Hangfire.ServiceFabric.Dtos;
 using HangFireStorageService.Dto;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Data.Collections;
@@ -44,7 +45,7 @@ namespace HangFireStorageService.Servces
 
         }
 
-        public async Task<List<SetDto>> GetAllSetsAsync()
+        public async Task<List<SetDto>> GetSetsAsync()
         {
             var set_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, SetDto>>(Consts.SET_DICT);
             var ls = new List<SetDto>();

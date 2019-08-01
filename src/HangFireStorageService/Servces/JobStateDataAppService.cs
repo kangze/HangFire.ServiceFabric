@@ -17,8 +17,8 @@ namespace HangFireStorageService.Servces
     public class JobStateDataAppService : HangfireDataBaseService, IJobStateDataAppService
     {
 
-        public JobStateDataAppService(IReliableStateManager stateManager, ServiceFabricOptions options, IMapper mapper)
-            : base(stateManager, options, mapper)
+        public JobStateDataAppService(IReliableStateManager stateManager, ServiceFabricOptions options)
+            : base(stateManager, options)
         {
 
         }

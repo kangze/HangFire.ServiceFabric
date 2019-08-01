@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace HangFireStorageService.Servces
 {
-    public interface IJobListAppService : IService
+    public interface IListAppService : IService
     {
         Task RemoveRange(string key, int keepStartingFrom, int keepEndingAt);
 
@@ -16,6 +16,6 @@ namespace HangFireStorageService.Servces
 
         Task Remove(string key, string value);
 
-        Task<List<ListDto>> GetListDto(string key);
+        Task<List<ListDto>> GetListDtoAsync(string key);
     }
 }

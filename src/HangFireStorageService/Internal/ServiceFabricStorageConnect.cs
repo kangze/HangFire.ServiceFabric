@@ -8,6 +8,7 @@ using Hangfire.Annotations;
 using Hangfire.Common;
 using Hangfire.Server;
 using Hangfire.ServiceFabric.Dtos;
+using Hangfire.ServiceFabric.Internal;
 using Hangfire.Storage;
 using HangFireStorageService.Dto;
 using HangFireStorageService.Servces;
@@ -18,7 +19,6 @@ namespace HangFireStorageService.Internal
     internal class ServiceFabricStorageConnect : JobStorageConnection
     {
 
-        private readonly IJobDataService _jobDataService;
         private readonly IJobAppService _jobAppService;
         private readonly IJobQueueAppService _jobQueueAppService;
         private readonly IJobStateDataAppService _jobStateDataAppService;
@@ -27,10 +27,11 @@ namespace HangFireStorageService.Internal
         private readonly IHashAppService _hashAppService;
         private readonly ICounterAppService _counterAppService;
         private readonly IAggregatedCounterAppService _aggregatedCounterAppService;
-        private readonly IJobListAppService _jobListAppService;
+        private readonly IListAppService _jobListAppService;
+
+        private readonly ServiceFabricJobFetcher _jobFetcher;
 
         public ServiceFabricStorageConnect(
-            IJobDataService jobDataService,
             IJobAppService jobAppService,
             IJobStateDataAppService jobStateDataAppService,
             IServerAppService serverAppService,
@@ -39,12 +40,11 @@ namespace HangFireStorageService.Internal
             IJobQueueAppService jobQueueAppService,
             ICounterAppService counterAppService,
             IAggregatedCounterAppService aggregatedCounterAppService,
-            IJobListAppService jobListAppService
+            IListAppService jobListAppService
             )
         {
             this._aggregatedCounterAppService = aggregatedCounterAppService;
             this._counterAppService = counterAppService;
-            this._jobDataService = jobDataService;
             this._jobAppService = jobAppService;
             this._jobStateDataAppService = jobStateDataAppService;
             this._serverAppService = serverAppService;
@@ -52,11 +52,12 @@ namespace HangFireStorageService.Internal
             this._hashAppService = hashAppService;
             this._jobQueueAppService = jobQueueAppService;
             this._jobListAppService = jobListAppService;
+            _jobFetcher = new ServiceFabricJobFetcher(jobQueueAppService);
         }
 
         public ServiceFabricWriteOnlyTransaction CreateTransaction()
         {
-            return new ServiceFabricWriteOnlyTransaction(this._jobQueueAppService, this._jobAppService, this._jobStateDataAppService, this._serverAppService, this._counterAppService, this._aggregatedCounterAppService, this._jobSetsAppService, this._jobDataService, this._hashAppService, this._jobListAppService);
+            return new ServiceFabricWriteOnlyTransaction(this._jobQueueAppService, this._jobAppService, this._jobStateDataAppService, this._serverAppService, this._counterAppService, this._aggregatedCounterAppService, this._jobSetsAppService, this._hashAppService, this._jobListAppService);
         }
 
         public override void Dispose()
@@ -66,7 +67,7 @@ namespace HangFireStorageService.Internal
 
         public override IWriteOnlyTransaction CreateWriteTransaction()
         {
-            return new ServiceFabricWriteOnlyTransaction(this._jobQueueAppService, this._jobAppService, this._jobStateDataAppService, this._serverAppService, this._counterAppService, this._aggregatedCounterAppService, this._jobSetsAppService, this._jobDataService, this._hashAppService, this._jobListAppService);
+            return new ServiceFabricWriteOnlyTransaction(this._jobQueueAppService, this._jobAppService, this._jobStateDataAppService, this._serverAppService, this._counterAppService, this._aggregatedCounterAppService, this._jobSetsAppService, this._hashAppService, this._jobListAppService);
         }
 
         public override IDisposable AcquireDistributedLock(string resource, TimeSpan timeout)
@@ -88,7 +89,7 @@ namespace HangFireStorageService.Internal
 
         public override IFetchedJob FetchNextJob(string[] queues, CancellationToken cancellationToken)
         {
-            return new ServiceFabricTransactionJob(queues, cancellationToken, this._jobQueueAppService);
+            return _jobFetcher.FetchNextJob(queues, cancellationToken);
         }
 
         public override void SetJobParameter(string id, string name, string value)
@@ -203,7 +204,7 @@ namespace HangFireStorageService.Internal
 
         public override HashSet<string> GetAllItemsFromSet(string key)
         {
-            var all_sets = this._jobSetsAppService.GetAllSetsAsync().GetAwaiter().GetResult();
+            var all_sets = this._jobSetsAppService.GetSetsAsync().GetAwaiter().GetResult();
             return all_sets.Where(u => u.Key == key).Select(u => u.Value).ToHashSet();
         }
 
@@ -212,20 +213,23 @@ namespace HangFireStorageService.Internal
             if (key == null) throw new ArgumentNullException(nameof(key));
             if (toScore < fromScore) throw new ArgumentException("The `toScore` value must be higher or equal to the `fromScore` value.", nameof(toScore));
 
-            var all_sets = this._jobSetsAppService.GetAllSetsAsync().GetAwaiter().GetResult();
+            var all_sets = this._jobSetsAppService.GetSetsAsync().GetAwaiter().GetResult();
             var firtst_set = all_sets.Where(u => u.Score >= fromScore && u.Score <= toScore).OrderBy(u => u.Score).FirstOrDefault();
             return firtst_set == null ? "" : firtst_set.Value;
         }
 
         public override void SetRangeInHash(string key, IEnumerable<KeyValuePair<string, string>> keyValuePairs)
         {
-            //normal,there must exited a blocked it
-            this._hashAppService.AddOrUpdateAsync(key, keyValuePairs.ToDictionary(u => u.Key, u => u.Value)).GetAwaiter().GetResult();
+            using (var transaction = CreateTransaction())
+            {
+                transaction.SetRangeInHash(key, keyValuePairs);
+                transaction.Commit();
+            }
         }
 
         public override Dictionary<string, string> GetAllEntriesFromHash(string key)
         {
-            var hash = this._hashAppService.GetHashDto(key).GetAwaiter().GetResult();
+            var hash = this._hashAppService.GetHashDtoAsync(key).GetAwaiter().GetResult();
             return hash.Fields;
         }
 
@@ -258,14 +262,14 @@ namespace HangFireStorageService.Internal
                 throw new ArgumentNullException(nameof(key));
             }
 
-            var hash = this._hashAppService.GetHashDto(key).GetAwaiter().GetResult();
+            var hash = this._hashAppService.GetHashDtoAsync(key).GetAwaiter().GetResult();
 
             return hash?.Fields.Count ?? 0;
         }
 
         public override List<string> GetAllItemsFromList([NotNull] string key)
         {
-            var list = this._jobListAppService.GetListDto(key).GetAwaiter().GetResult();
+            var list = this._jobListAppService.GetListDtoAsync(key).GetAwaiter().GetResult();
             return list.Select(u => u.Value).ToList();
         }
 

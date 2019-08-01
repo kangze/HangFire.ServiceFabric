@@ -22,9 +22,8 @@ namespace HangFireStorageService.Internal
         private readonly ICounterAppService _counterAppService;
         private readonly IAggregatedCounterAppService _aggregatedCounterAppService;
         private readonly IJobSetAppService _jobSetAppService;
-        private readonly IJobDataService _jobDataService;
         private readonly IHashAppService _hashAppService;
-        private readonly IJobListAppService _jobListAppService;
+        private readonly IListAppService _jobListAppService;
 
 
         private readonly List<Action<IHashAppService>> _hashActions = new List<Action<IHashAppService>>();
@@ -33,7 +32,7 @@ namespace HangFireStorageService.Internal
         private readonly List<Action<IJobQueueAppService>> _jobQueueActions = new List<Action<IJobQueueAppService>>();
         private readonly List<Action<ICounterAppService>> _counterAppActions = new List<Action<ICounterAppService>>();
         private readonly List<Action<IJobSetAppService>> _jobSetAppActions = new List<Action<IJobSetAppService>>();
-        private readonly List<Action<IJobListAppService>> _jobListAppActions = new List<Action<IJobListAppService>>();
+        private readonly List<Action<IListAppService>> _jobListAppActions = new List<Action<IListAppService>>();
 
 
 
@@ -45,9 +44,8 @@ namespace HangFireStorageService.Internal
             ICounterAppService counterAppService,
             IAggregatedCounterAppService aggregatedCounterAppService,
             IJobSetAppService jobSetAppService,
-            IJobDataService jobDataService,
             IHashAppService hashAppService,
-            IJobListAppService jobListAppService
+            IListAppService jobListAppService
             )
         {
             this._jobQueueAppService = jobQueueAppService;
@@ -57,7 +55,6 @@ namespace HangFireStorageService.Internal
             this._jobSetAppService = jobSetAppService;
             this._jobStateDataAppService = jobStateDataAppService;
             this._jobAppService = jobAppService;
-            this._jobDataService = jobDataService;
             this._hashAppService = hashAppService;
             this._jobListAppService = jobListAppService;
         }
@@ -175,7 +172,7 @@ namespace HangFireStorageService.Internal
         {
             this._jobQueueActions.Add((jobQueueAppService) =>
             {
-                jobQueueAppService.AddToQueueJObAsync(queue, long.Parse(jobId)).GetAwaiter().GetResult();
+                jobQueueAppService.AddToQueueJObAsync(queue, jobId).GetAwaiter().GetResult();
             });
         }
 
@@ -201,7 +198,7 @@ namespace HangFireStorageService.Internal
         {
             this._counterAppActions.Add((counterAppService) =>
             {
-                counterAppService.DeleteAsync(key, null).GetAwaiter().GetResult();
+                counterAppService.DecrementAsync(key, -1, null).GetAwaiter().GetResult();
 
             });
         }
@@ -210,7 +207,7 @@ namespace HangFireStorageService.Internal
         {
             this._counterAppActions.Add((counterAppService) =>
             {
-                counterAppService.DeleteAsync(key, expireIn).GetAwaiter().GetResult();
+                counterAppService.DecrementAsync(key, -1, expireIn).GetAwaiter().GetResult();
 
             });
         }
@@ -267,26 +264,15 @@ namespace HangFireStorageService.Internal
         {
             this._hashActions.Add((hashAppService) =>
             {
-                var hashs = hashAppService.GetAllHashAsync().GetAwaiter().GetResult();
-                if (hashs.Where(u => u.Key == key).Count() == 0)
+                var hashDto = hashAppService.GetHashDtoAsync(key).GetAwaiter().GetResult();
+                var dto = new HashDto()
                 {
-                    //add it
-                    var dict = keyValuePairs.ToDictionary(u => u.Key, u => u.Value);
-                    hashAppService.AddOrUpdateAsync(key, dict).GetAwaiter().GetResult();
-                }
-                else
-                {
-
-                    foreach (var pair in keyValuePairs)
-                    {
-                        var currentHash = hashs.FirstOrDefault(u => u.Key == pair.Key);
-                        if (currentHash != null && currentHash.Value == pair.Value)
-                            continue;
-                        else if (currentHash != null)
-                            hashAppService.AddOrUpdateAsync(key, new Dictionary<string, string>() { { pair.Key, pair.Value } });
-
-                    }
-                }
+                    Id = hashDto == null ? null : hashDto.Id,
+                    Key = key,
+                    Fields = keyValuePairs.ToDictionary(u => u.Key, u => u.Value),
+                    ExpireAt = null,
+                };
+                hashAppService.AddOrUpdateAsync(hashDto).GetAwaiter().GetResult();
             });
         }
 

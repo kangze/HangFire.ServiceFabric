@@ -12,10 +12,10 @@ namespace HangFireStorageService.Servces
     {
         Task RemoveAsync(string key);
 
-        Task<HashDto> GetHashDto(string key);
+        Task<HashDto> GetHashDtoAsync(string key);
 
         Task<List<HashDto>> GetAllHashAsync();
 
-        Task AddOrUpdateAsync(string key, Dictionary<string, string> dict);
+        Task AddOrUpdateAsync(HashDto dto);
     }
 }

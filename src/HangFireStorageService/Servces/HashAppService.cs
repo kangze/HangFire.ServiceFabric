@@ -47,39 +47,28 @@ namespace HangFireStorageService.Servces
             return ls;
         }
 
-        public async Task AddOrUpdateAsync(string key, Dictionary<string, string> dict)
+        public async Task AddOrUpdateAsync(HashDto dto)
         {
+            var hash_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, HashDto>>(Consts.HASH_DICT);
+            using (var tx = this._stateManager.CreateTransaction())
+            {
+                await hash_dict.SetAsync(tx, dto.Id, dto);
+                await tx.CommitAsync();
+            }
+        }
 
-            var hash_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, List<HashDto>>>(Consts.HASH_DICT);
+        public async Task<HashDto> GetHashDtoAsync(string key)
+        {
+            var hash_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, HashDto>>(Consts.HASH_DICT);
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var emulator = (await hash_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
                 while (await emulator.MoveNextAsync(default))
                 {
-                    var current = emulator.Current.Value;
-                    if (emulator.Current.Key == key)
-                    {
-                        foreach (var item in dict)
-                        {
-                            var key_value_pair = emulator.Current.Value.FirstOrDefault(u => u.Key == item.Key);
-                            if (key_value_pair != null) key_value_pair.Value = item.Value;
-                            else current.Add(new HashDto() { Key = key, Field = item.Key, Value = item.Value });
-                        }
-                        await hash_dict.SetAsync(tx, key, current);
-                        await tx.CommitAsync();
-                        return;
-                    }
+                    if (emulator.Current.Value.Key == key)
+                        return emulator.Current.Value;
                 }
-
-                //There must has add it
-                var hashDtos = dict.Select(u => new HashDto()
-                {
-                    Key = key,
-                    Field = u.Key,
-                    Value = u.Value
-                }).ToList();
-                await hash_dict.SetAsync(tx, key, hashDtos);
-                await tx.CommitAsync();
+                return null;
             }
         }
     }

@@ -19,7 +19,6 @@ namespace HangFireStorageService.Internal
     {
         private readonly IJobQueueAppService _jobQueueAppService;
         private readonly IJobAppService _jobAppService;
-        private readonly IJobStateDataAppService _jobStateDataAppService;
         private readonly IServerAppService _serverAppService;
         private readonly ICounterAppService _counterAppService;
         private readonly IAggregatedCounterAppService _aggregatedCounterAppService;
@@ -28,7 +27,6 @@ namespace HangFireStorageService.Internal
         public ServiceFabricMonitoringApi(
             IJobQueueAppService jobQueueAppService,
             IJobAppService jobAppService,
-            IJobStateDataAppService jobStateDataAppService,
             IServerAppService serverAppService,
             ICounterAppService counterAppService,
             IAggregatedCounterAppService aggregatedCounterAppService,
@@ -40,7 +38,6 @@ namespace HangFireStorageService.Internal
             this._counterAppService = counterAppService;
             this._aggregatedCounterAppService = aggregatedCounterAppService;
             this._jobSetAppService = jobSetAppService;
-            this._jobStateDataAppService = jobStateDataAppService;
             this._jobAppService = jobAppService;
         }
 
@@ -123,7 +120,7 @@ namespace HangFireStorageService.Internal
         {
 
             var stats = new StatisticsDto();
-            var all_job = this._jobAppService.GetAllJobsAsync().GetAwaiter().GetResult();
+            var all_job = this._jobAppService.GetJobsAsync().GetAwaiter().GetResult();
             var countByStates = all_job
                 .Where(u => StatisticsStateNames.Contains(u.StateName))
                 .GroupBy(u => u.StateName)
@@ -149,7 +146,7 @@ namespace HangFireStorageService.Internal
             var deletedCounter = all_counter.FirstOrDefault(u => u.Key == statsDeleted);
             stats.Deleted = deletedCounter?.Value ?? 0;
 
-            var all_sets = this._jobSetAppService.GetAllSetsAsync().GetAwaiter().GetResult();
+            var all_sets = this._jobSetAppService.GetSetsAsync().GetAwaiter().GetResult();
             stats.Recurring = all_sets.Count(u => u.Key.Contains("recurring-jobs"));
 
             var queues = this._jobQueueAppService.GetQueuesAsync(null).GetAwaiter().GetResult();
@@ -365,7 +362,7 @@ namespace HangFireStorageService.Internal
         string stateName,
         Func<JobSummary, Job, Dictionary<string, string>, TDto> selector)
         {
-            var all_jobs = this._jobAppService.GetAllJobsAsync().GetAwaiter().GetResult();
+            var all_jobs = this._jobAppService.GetJobsAsync().GetAwaiter().GetResult();
 
             var jobs = all_jobs.Where(u => u.StateName == stateName).ToList();
             jobs = jobs.OrderBy(u => u.Id).Skip(from).Take(count).ToList();
@@ -394,7 +391,7 @@ namespace HangFireStorageService.Internal
 
         private JobList<FetchedJobDto> FetchedJobs(IEnumerable<string> jobIds)
         {
-            var jobs = this._jobAppService.GetJobDetailsAsync(jobIds.ToArray()).GetAwaiter().GetResult();
+            var jobs = this._jobAppService.GetJobsByIdsAsync(jobIds.ToArray()).GetAwaiter().GetResult();
             List<JobSummary> joinedJobs = jobs
                 .Select(job =>
                 {
@@ -431,7 +428,7 @@ namespace HangFireStorageService.Internal
 
         private JobList<EnqueuedJobDto> EnqueuedJobs(IEnumerable<string> jobIds)
         {
-            var jobDetails = this._jobAppService.GetJobDetailsAsync(jobIds.ToArray()).GetAwaiter().GetResult();
+            var jobDetails = this._jobAppService.GetJobsByIdsAsync(jobIds.ToArray()).GetAwaiter().GetResult();
 
             var jobQueues = this._jobQueueAppService.GetQueuesAsync(null).GetAwaiter().GetResult();
             var enqueuedJobs = from queue in jobQueues
@@ -474,7 +471,7 @@ namespace HangFireStorageService.Internal
 
         private long GetNumberOfJobsByStateName(string stateName)
         {
-            var all_job = this._jobAppService.GetAllJobsAsync().GetAwaiter().GetResult();
+            var all_job = this._jobAppService.GetJobsAsync().GetAwaiter().GetResult();
             var count = all_job.Count(u => u.StateName == stateName);
             return count;
         }

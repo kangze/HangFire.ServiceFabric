@@ -88,7 +88,7 @@ namespace Hangfire.ServiceFabric.Internal
             fetchedJob.FetchedAt = DateTime.Now;
             this._jobQueueAppService.UpdateQueueAsync(fetchedJob);
 
-            return new ServiceFabricFetchedJob(_dbContext, fetchedJob.Id, fetchedJob.JobId, fetchedJob.Queue);
+            return new ServiceFabricFetchedJob(fetchedJob.Id, fetchedJob.JobId,queue, _jobQueueAppService);
         }
     }
 }

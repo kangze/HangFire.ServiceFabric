@@ -15,13 +15,13 @@ namespace HangFireStorageService.Servces
 
         Task<JobQueueDto> GetQueueAsync(string id);
 
-        Task DeleteQueueJobAsync(string queue, long jobId);
+        Task DeleteQueueJobAsync(string queue, string jobId);
 
         Task DeleteQueueJobAsync(string id);
 
         Task UpdateQueueAsync(JobQueueDto dto);
 
-        Task AddToQueueJObAsync(string queue, long jobId);
+        Task AddToQueueJObAsync(string queue, string jobId);
 
         Task<List<JobQueueDto>> GetEnqueuedJob(string queue, int from, int perPage);
 

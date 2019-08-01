@@ -8,6 +8,8 @@ namespace HangFireStorageService.Dto
 {
     public class JobQueueDto
     {
+        public string Id { get; set; }
+
         public string Queue { get; set; }
 
         public string JobId { get; set; }

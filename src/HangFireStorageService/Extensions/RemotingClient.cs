@@ -66,22 +66,16 @@ namespace HangFireStorageService.Extensions
             return proxyFactory.CreateServiceProxy<IJobSetAppService>(uri, listenerName: Constants.ListenerNames_JobSetAppService);
         }
 
-        public static IJobDataService CreateJobDataService()
-        {
-            var uri = new Uri(ApplicationUri);
-            return proxyFactory.CreateServiceProxy<IJobDataService>(uri, listenerName: Constants.ListenerNames_JobDataService);
-        }
-
         public static IHashAppService CreateHashAppService()
         {
             var uri = new Uri(ApplicationUri);
             return proxyFactory.CreateServiceProxy<IHashAppService>(uri, listenerName: Constants.ListenerNames_HashAppService);
         }
 
-        public static IJobListAppService CreateJobListAppService()
+        public static IListAppService CreateJobListAppService()
         {
             var uri = new Uri(ApplicationUri);
-            return proxyFactory.CreateServiceProxy<IJobListAppService>(uri, listenerName: Constants.ListenerNames_jobListAppSerivce);
+            return proxyFactory.CreateServiceProxy<IListAppService>(uri, listenerName: Constants.ListenerNames_jobListAppSerivce);
         }
     }
 }
