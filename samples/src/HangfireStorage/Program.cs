@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ServiceFabric.Services.Runtime;
 
-namespace HangFireStorageHost
+namespace HangfireStorage
 {
     internal static class Program
     {
@@ -19,11 +19,11 @@ namespace HangFireStorageHost
                 // Registering a service maps a service type name to a .NET type.
                 // When Service Fabric creates an instance of this service type,
                 // an instance of the class is created in this host process.
-                var serviceType = typeof(Service).Namespace + "Type";
-                ServiceRuntime.RegisterServiceAsync(serviceType,
-                    context => new Service(context)).GetAwaiter().GetResult();
 
-                ServiceEventSource.Current.ServiceTypeRegistered(Process.GetCurrentProcess().Id, serviceType);
+                ServiceRuntime.RegisterServiceAsync("HangfireStorageType",
+                    context => new HangfireStorage(context)).GetAwaiter().GetResult();
+
+                ServiceEventSource.Current.ServiceTypeRegistered(Process.GetCurrentProcess().Id, typeof(HangfireStorage).Name);
 
                 // Prevents this host process from terminating so services keep running.
                 Thread.Sleep(Timeout.Infinite);

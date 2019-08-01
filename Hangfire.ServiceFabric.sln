@@ -7,6 +7,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hangfire.ServiceFabric", "s
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{0BBF1D7A-D1B3-40EC-A19E-41F25445AA14}"
 EndProject
+Project("{A07B5EB6-E848-4116-A8D0-A826331D98C6}") = "HangfireServiceFabricSfApp", "samples\HangfireServiceFabricSfApp\HangfireServiceFabricSfApp.sfproj", "{78DD4571-E866-432C-B96B-40AB020D48DF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HangfireStorage", "samples\src\HangfireStorage\HangfireStorage.csproj", "{1A5E29EC-31CE-4593-8177-C3D74BE51F2B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,9 +27,29 @@ Global
 		{C4BD3C69-F6F8-4A09-BCA2-8B39B883B956}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C4BD3C69-F6F8-4A09-BCA2-8B39B883B956}.Release|x64.ActiveCfg = Release|Any CPU
 		{C4BD3C69-F6F8-4A09-BCA2-8B39B883B956}.Release|x64.Build.0 = Release|Any CPU
+		{78DD4571-E866-432C-B96B-40AB020D48DF}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{78DD4571-E866-432C-B96B-40AB020D48DF}.Debug|x64.ActiveCfg = Debug|x64
+		{78DD4571-E866-432C-B96B-40AB020D48DF}.Debug|x64.Build.0 = Debug|x64
+		{78DD4571-E866-432C-B96B-40AB020D48DF}.Debug|x64.Deploy.0 = Debug|x64
+		{78DD4571-E866-432C-B96B-40AB020D48DF}.Release|Any CPU.ActiveCfg = Release|x64
+		{78DD4571-E866-432C-B96B-40AB020D48DF}.Release|x64.ActiveCfg = Release|x64
+		{78DD4571-E866-432C-B96B-40AB020D48DF}.Release|x64.Build.0 = Release|x64
+		{78DD4571-E866-432C-B96B-40AB020D48DF}.Release|x64.Deploy.0 = Release|x64
+		{1A5E29EC-31CE-4593-8177-C3D74BE51F2B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A5E29EC-31CE-4593-8177-C3D74BE51F2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A5E29EC-31CE-4593-8177-C3D74BE51F2B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1A5E29EC-31CE-4593-8177-C3D74BE51F2B}.Debug|x64.Build.0 = Debug|Any CPU
+		{1A5E29EC-31CE-4593-8177-C3D74BE51F2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A5E29EC-31CE-4593-8177-C3D74BE51F2B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A5E29EC-31CE-4593-8177-C3D74BE51F2B}.Release|x64.ActiveCfg = Release|Any CPU
+		{1A5E29EC-31CE-4593-8177-C3D74BE51F2B}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{78DD4571-E866-432C-B96B-40AB020D48DF} = {0BBF1D7A-D1B3-40EC-A19E-41F25445AA14}
+		{1A5E29EC-31CE-4593-8177-C3D74BE51F2B} = {0BBF1D7A-D1B3-40EC-A19E-41F25445AA14}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {68FA7B3F-82CF-4799-9814-D3E0E090C1A8}

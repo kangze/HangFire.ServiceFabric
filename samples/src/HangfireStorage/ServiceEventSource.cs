@@ -7,9 +7,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.ServiceFabric.Services.Runtime;
 
-namespace HangFireStorageHost
+namespace HangfireStorage
 {
-    [EventSource(Name = "MyCompany-ServiceFabricHangFireStorageHost-HangFireStorageHost")]
+    [EventSource(Name = "MyCompany-HangfireServiceFabricSfApp-HangfireStorage")]
     internal sealed class ServiceEventSource : EventSource
     {
         public static readonly ServiceEventSource Current = new ServiceEventSource();
