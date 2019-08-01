@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Hangfire.ServiceFabric.Dtos;
+﻿using Hangfire.ServiceFabric.Dtos;
 using Hangfire.ServiceFabric.Entities;
 using HangFireStorageService;
 using HangFireStorageService.Dto;

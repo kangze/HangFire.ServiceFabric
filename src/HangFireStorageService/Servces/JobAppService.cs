@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using AutoMapper;
 using Hangfire.ServiceFabric.Dtos;
 using Hangfire.ServiceFabric.Entities;
 using Hangfire.ServiceFabric.Servces;
