@@ -21,7 +21,6 @@ namespace HangFireStorageService.Internal
 
         private readonly IJobAppService _jobAppService;
         private readonly IJobQueueAppService _jobQueueAppService;
-        private readonly IJobStateDataAppService _jobStateDataAppService;
         private readonly IServerAppService _serverAppService;
         private readonly IJobSetAppService _jobSetsAppService;
         private readonly IHashAppService _hashAppService;
@@ -33,7 +32,6 @@ namespace HangFireStorageService.Internal
 
         public ServiceFabricStorageConnect(
             IJobAppService jobAppService,
-            IJobStateDataAppService jobStateDataAppService,
             IServerAppService serverAppService,
             IJobSetAppService setsAppService,
             IHashAppService hashAppService,
@@ -46,7 +44,6 @@ namespace HangFireStorageService.Internal
             this._aggregatedCounterAppService = aggregatedCounterAppService;
             this._counterAppService = counterAppService;
             this._jobAppService = jobAppService;
-            this._jobStateDataAppService = jobStateDataAppService;
             this._serverAppService = serverAppService;
             this._jobSetsAppService = setsAppService;
             this._hashAppService = hashAppService;
@@ -57,7 +54,7 @@ namespace HangFireStorageService.Internal
 
         public ServiceFabricWriteOnlyTransaction CreateTransaction()
         {
-            return new ServiceFabricWriteOnlyTransaction(this._jobQueueAppService, this._jobAppService, this._jobStateDataAppService, this._serverAppService, this._counterAppService, this._aggregatedCounterAppService, this._jobSetsAppService, this._hashAppService, this._jobListAppService);
+            return new ServiceFabricWriteOnlyTransaction(this._jobQueueAppService, this._jobAppService, this._serverAppService, this._counterAppService, this._aggregatedCounterAppService, this._jobSetsAppService, this._hashAppService, this._jobListAppService);
         }
 
         public override void Dispose()
@@ -67,7 +64,7 @@ namespace HangFireStorageService.Internal
 
         public override IWriteOnlyTransaction CreateWriteTransaction()
         {
-            return new ServiceFabricWriteOnlyTransaction(this._jobQueueAppService, this._jobAppService, this._jobStateDataAppService, this._serverAppService, this._counterAppService, this._aggregatedCounterAppService, this._jobSetsAppService, this._hashAppService, this._jobListAppService);
+            return new ServiceFabricWriteOnlyTransaction(this._jobQueueAppService, this._jobAppService, this._serverAppService, this._counterAppService, this._aggregatedCounterAppService, this._jobSetsAppService, this._hashAppService, this._jobListAppService);
         }
 
         public override IDisposable AcquireDistributedLock(string resource, TimeSpan timeout)

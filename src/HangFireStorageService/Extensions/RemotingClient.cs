@@ -36,11 +36,6 @@ namespace HangFireStorageService.Extensions
             return services;
         }
 
-        public static IJobStateDataAppService CreateJobStateDataAppService()
-        {
-            var uri = new Uri(ApplicationUri);
-            return proxyFactory.CreateServiceProxy<IJobStateDataAppService>(uri, listenerName: Constants.ListenerNames_JobStateDataAppService);
-        }
 
         public static IServerAppService CreateServiceAppService()
         {

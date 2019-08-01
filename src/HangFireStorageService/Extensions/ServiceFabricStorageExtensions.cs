@@ -40,8 +40,6 @@ namespace HangFireStorageService.Extensions
                 new ServiceReplicaListener((c) =>
                      new FabricTransportServiceRemotingListener(c, new JobQueueuAppService(stateManager,options)) , Constants.ListenerNames_JobQueueAppService),
                 new ServiceReplicaListener((c) =>
-                     new FabricTransportServiceRemotingListener(c, new JobStateDataAppService(stateManager)) , Constants.ListenerNames_JobStateDataAppService),
-                new ServiceReplicaListener((c) =>
                      new FabricTransportServiceRemotingListener(c, new ServerAppService(stateManager)) , Constants.ListenerNames_ServerAppService),
                 new ServiceReplicaListener((c) =>
                      new FabricTransportServiceRemotingListener(c, new CounterAppService(stateManager)) , Constants.ListenerNames_CounterAppService),
@@ -49,8 +47,6 @@ namespace HangFireStorageService.Extensions
                      new FabricTransportServiceRemotingListener(c, new AggregatedCounterAppService(stateManager)) , Constants.ListenerNames_AggregatedCounterAppService),
                 new ServiceReplicaListener((c) =>
                      new FabricTransportServiceRemotingListener(c, new JobSetAppService(stateManager)) , Constants.ListenerNames_JobSetAppService),
-                new ServiceReplicaListener((c) =>
-                     new FabricTransportServiceRemotingListener(c, new JobDataService(stateManager)) , Constants.ListenerNames_JobDataService),
                 new ServiceReplicaListener((c) =>
                      new FabricTransportServiceRemotingListener(c, new HashAppService(stateManager)) , Constants.ListenerNames_HashAppService)
             };

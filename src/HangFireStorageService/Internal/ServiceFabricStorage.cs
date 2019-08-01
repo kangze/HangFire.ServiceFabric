@@ -14,7 +14,6 @@ namespace HangFireStorageService.Internal
     {
         private readonly IJobQueueAppService _jobQueueAppService;
         private readonly IJobAppService _jobAppService;
-        private readonly IJobStateDataAppService _jobStateDataAppService;
         private readonly IServerAppService _serverAppService;
         private readonly ICounterAppService _counterAppService;
         private readonly IAggregatedCounterAppService _aggregatedCounterAppService;
@@ -25,7 +24,6 @@ namespace HangFireStorageService.Internal
         private ServiceFabricStorage(
             IJobQueueAppService jobQueueAppService,
             IJobAppService jobAppService,
-            IJobStateDataAppService jobStateDataAppService,
             IServerAppService serverAppService,
             ICounterAppService counterAppService,
             IAggregatedCounterAppService aggregatedCounterAppService,
@@ -39,7 +37,6 @@ namespace HangFireStorageService.Internal
             this._counterAppService = counterAppService;
             this._aggregatedCounterAppService = aggregatedCounterAppService;
             this._jobSetAppService = jobSetAppService;
-            this._jobStateDataAppService = jobStateDataAppService;
             this._jobAppService = jobAppService;
             this._hashAppService = hashAppService;
             this._jobListAppService = jobListAppService;
@@ -50,7 +47,6 @@ namespace HangFireStorageService.Internal
             RemotingClient.ApplicationUri = option.ApplicationUri;
             var jobQueueAppService = RemotingClient.CreateJobQueueAppService();
             var jobAppService = RemotingClient.CreateJobAppService();
-            var jobStateDataAppService = RemotingClient.CreateJobStateDataAppService();
             var serverAppService = RemotingClient.CreateServiceAppService();
             var counterAppService = RemotingClient.CreateCounterAppService();
             var jobSetAppService = RemotingClient.CreateJobSetAppService();
@@ -60,7 +56,6 @@ namespace HangFireStorageService.Internal
             return new ServiceFabricStorage(
                 jobQueueAppService,
                 jobAppService,
-                jobStateDataAppService,
                 serverAppService,
                 counterAppService,
                 aggregatedAppService,
@@ -77,7 +72,7 @@ namespace HangFireStorageService.Internal
 
         public override IStorageConnection GetConnection()
         {
-            return new ServiceFabricStorageConnect(this._jobAppService, this._jobStateDataAppService, this._serverAppService, this._jobSetAppService, this._hashAppService, this._jobQueueAppService, this._counterAppService, this._aggregatedCounterAppService, this._jobListAppService);
+            return new ServiceFabricStorageConnect(this._jobAppService, this._serverAppService, this._jobSetAppService, this._hashAppService, this._jobQueueAppService, this._counterAppService, this._aggregatedCounterAppService, this._jobListAppService);
         }
     }
 }

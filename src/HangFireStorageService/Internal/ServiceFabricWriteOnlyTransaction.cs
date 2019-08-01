@@ -17,7 +17,6 @@ namespace HangFireStorageService.Internal
 
         private readonly IJobQueueAppService _jobQueueAppService;
         private readonly IJobAppService _jobAppService;
-        private readonly IJobStateDataAppService _jobStateDataAppService;
         private readonly IServerAppService _serverAppService;
         private readonly ICounterAppService _counterAppService;
         private readonly IAggregatedCounterAppService _aggregatedCounterAppService;
@@ -28,7 +27,6 @@ namespace HangFireStorageService.Internal
 
         private readonly List<Action<IHashAppService>> _hashActions = new List<Action<IHashAppService>>();
         private readonly List<Action<IJobAppService>> _jobActions = new List<Action<IJobAppService>>();
-        private readonly List<Action<IJobStateDataAppService>> _jobStateDataActions = new List<Action<IJobStateDataAppService>>();
         private readonly List<Action<IJobQueueAppService>> _jobQueueActions = new List<Action<IJobQueueAppService>>();
         private readonly List<Action<ICounterAppService>> _counterAppActions = new List<Action<ICounterAppService>>();
         private readonly List<Action<IJobSetAppService>> _jobSetAppActions = new List<Action<IJobSetAppService>>();
@@ -39,7 +37,6 @@ namespace HangFireStorageService.Internal
         public ServiceFabricWriteOnlyTransaction(
             IJobQueueAppService jobQueueAppService,
             IJobAppService jobAppService,
-            IJobStateDataAppService jobStateDataAppService,
             IServerAppService serverAppService,
             ICounterAppService counterAppService,
             IAggregatedCounterAppService aggregatedCounterAppService,
@@ -53,7 +50,6 @@ namespace HangFireStorageService.Internal
             this._counterAppService = counterAppService;
             this._aggregatedCounterAppService = aggregatedCounterAppService;
             this._jobSetAppService = jobSetAppService;
-            this._jobStateDataAppService = jobStateDataAppService;
             this._jobAppService = jobAppService;
             this._hashAppService = hashAppService;
             this._jobListAppService = jobListAppService;
@@ -288,7 +284,6 @@ namespace HangFireStorageService.Internal
         {
             this._hashActions.ForEach(u => u.Invoke(this._hashAppService));
             this._jobActions.ForEach(u => u.Invoke(this._jobAppService));
-            this._jobStateDataActions.ForEach(u => u.Invoke(this._jobStateDataAppService));
             this._jobQueueActions.ForEach(u => u.Invoke(this._jobQueueAppService));
             this._counterAppActions.ForEach(u => u.Invoke(this._counterAppService));
             this._jobSetAppActions.ForEach(u => u.Invoke(this._jobSetAppService));
