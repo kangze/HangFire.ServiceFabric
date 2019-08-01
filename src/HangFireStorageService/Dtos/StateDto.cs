@@ -9,8 +9,18 @@ using System.Threading.Tasks;
 namespace Hangfire.ServiceFabric.Dtos
 {
     [DataContract]
-    public class StateDto : StateEntity
+    public class StateDto
     {
 
+        public string Name { get; set; }
+
+
+        public string Reason { get; set; }
+
+
+        public DateTime CreatedAt { get; set; }
+
+
+        public Dictionary<string, string> Data { get; set; }
     }
 }

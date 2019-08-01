@@ -10,7 +10,7 @@ namespace HangFireStorageService.Dto
     {
         public string Queue { get; set; }
 
-        public long JobId { get; set; }
+        public string JobId { get; set; }
 
         public DateTime? FetchedAt { get; set; }
     }

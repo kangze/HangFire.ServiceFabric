@@ -54,6 +54,11 @@ namespace HangFireStorageService.Internal
             this._jobListAppService = jobListAppService;
         }
 
+        public ServiceFabricWriteOnlyTransaction CreateTransaction()
+        {
+            return new ServiceFabricWriteOnlyTransaction(this._jobQueueAppService, this._jobAppService, this._jobStateDataAppService, this._serverAppService, this._counterAppService, this._aggregatedCounterAppService, this._jobSetsAppService, this._jobDataService, this._hashAppService, this._jobListAppService);
+        }
+
         public override void Dispose()
         {
 
@@ -72,21 +77,13 @@ namespace HangFireStorageService.Internal
 
         public override string CreateExpiredJob(Job job, IDictionary<string, string> parameters, DateTime createdAt, TimeSpan expireIn)
         {
-
-            var invocationData = InvocationData.SerializeJob(job);
-            var playload = invocationData.SerializePayload(true);
-            var jobDto = new JobDto()
+            using (var transaction = CreateTransaction())
             {
-                InvocationData = playload,
-                Arguments = invocationData.Arguments,
-                CreatedAt = createdAt,
-                ExpireAt = createdAt.Add(expireIn),
-                Parameters = new Dictionary<string, string>()
-            };
-            foreach (var pair in parameters)
-                jobDto.Parameters.Add(pair.Key, pair.Value);
-            jobDto = this._jobAppService.AddOrUpdateAsync(jobDto).GetAwaiter().GetResult();
-            return jobDto.Id.ToString();
+                var jobId = transaction.CreateExpiredJob(job, parameters, createdAt, expireIn);
+                transaction.Commit();
+                return jobId;
+            }
+
         }
 
         public override IFetchedJob FetchNextJob(string[] queues, CancellationToken cancellationToken)
@@ -96,18 +93,16 @@ namespace HangFireStorageService.Internal
 
         public override void SetJobParameter(string id, string name, string value)
         {
-            var job = this._jobAppService.GetJobAsync(id).GetAwaiter().GetResult();
-            if (job == null)
-                throw new ArgumentNullException(string.Format("JobId:{0},Not Found", id));
-            if (job.Parameters == null)
-                job.Parameters = new Dictionary<string, string>();
-            job.Parameters.Add(name, value);
-            this._jobAppService.UpdateJobAsync(job).GetAwaiter().GetResult();
+            using (var transaction = CreateTransaction())
+            {
+                transaction.SetJobParameter(id, name, value);
+                transaction.Commit();
+            }
         }
 
         public override string GetJobParameter(string id, string name)
         {
-            var job = this._jobAppService.GetJobAsync(long.Parse(id)).GetAwaiter().GetResult();
+            var job = this._jobAppService.GetJobAsync(id).GetAwaiter().GetResult();
             if (job == null)
                 throw new Exception("没有找到任务");
             var parameter = job.Parameters.FirstOrDefault(u => u.Key == name);
@@ -119,7 +114,7 @@ namespace HangFireStorageService.Internal
         {
             if (string.IsNullOrEmpty(jobId))
                 return null;
-            var job = this._jobAppService.GetJobAsync(long.Parse(jobId)).GetAwaiter().GetResult();
+            var job = this._jobAppService.GetJobAsync(jobId).GetAwaiter().GetResult();
             if (job == null)
                 return null;
             var invocationData = InvocationData.DeserializePayload(job.InvocationData);
@@ -135,14 +130,30 @@ namespace HangFireStorageService.Internal
 
         public override StateData GetStateData(string jobId)
         {
-            var stateData = this._jobStateDataAppService.GetLatestJobStateDataAsync(long.Parse(jobId)).GetAwaiter().GetResult();
-            var data = new Dictionary<string, string>(SerializationHelper.Deserialize<Dictionary<string, string>>(stateData.Data), StringComparer.OrdinalIgnoreCase);
-
-            return new StateData()
+            if (jobId == null)
             {
-                Name = stateData.Name,
-                Reason = stateData.Reason,
-                Data = data
+                throw new ArgumentNullException(nameof(jobId));
+            }
+
+            var job = this._jobAppService.GetJobAsync(jobId).GetAwaiter().GetResult();
+
+            if (job == null)
+            {
+                return null;
+            }
+
+            var state = job.StateHistory.LastOrDefault();
+
+            if (state == null)
+            {
+                return null;
+            }
+
+            return new StateData
+            {
+                Name = state.Name,
+                Reason = state.Reason,
+                Data = state.Data
             };
         }
 
@@ -214,13 +225,20 @@ namespace HangFireStorageService.Internal
 
         public override Dictionary<string, string> GetAllEntriesFromHash(string key)
         {
-            var all_hash = this._hashAppService.GetAllHashAsync().GetAwaiter().GetResult();
-            return all_hash.Where(u => u.Key == key).ToDictionary(u => u.Field, u => u.Value);
+            var hash = this._hashAppService.GetHashDto(key).GetAwaiter().GetResult();
+            return hash.Fields;
         }
 
-        public override long GetCounter([NotNull] string key)
+        public override long GetCounter(string key)
         {
-            return 0;
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            var counter = this._counterAppService.GetCounterAsync(key).GetAwaiter().GetResult();
+
+            return counter?.Value ?? 0;
         }
 
         public override long GetSetCount([NotNull] string key)
@@ -235,12 +253,20 @@ namespace HangFireStorageService.Internal
 
         public override long GetHashCount([NotNull] string key)
         {
-            return 0;
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            var hash = this._hashAppService.GetHashDto(key).GetAwaiter().GetResult();
+
+            return hash?.Fields.Count ?? 0;
         }
 
         public override List<string> GetAllItemsFromList([NotNull] string key)
         {
-            return new List<string>();
+            var list = this._jobListAppService.GetListDto(key).GetAwaiter().GetResult();
+            return list.Select(u => u.Value).ToList();
         }
 
         public override List<string> GetFirstByLowestScoreFromSet(string key, double fromScore, double toScore, int count)

@@ -20,6 +20,7 @@ namespace HangFireStorageService.Servces
 
         Task AddJobStateAsync(string jobId, StateDto state);
 
+        Task<List<JobDto>> GetAllJobsAsync();
 
     }
 }

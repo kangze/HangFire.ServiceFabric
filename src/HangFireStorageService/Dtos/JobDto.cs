@@ -9,15 +9,25 @@ using Hangfire.ServiceFabric.Entities;
 namespace Hangfire.ServiceFabric.Dtos
 {
     [DataContract]
-    public class JobDto : JobEntity
+    public class JobDto
     {
-        [DataMember]
-        public string Reason { get; set; }
+        public string Id { get; set; }
 
-        [DataMember]
-        public string StateData { get; set; }
+        public DateTime? ExpireAt { get; set; }
 
-        [DataMember]
-        public DateTime? StateChanged { get; set; }
+        public string StateName { get; set; }
+
+
+        public string InvocationData { get; set; }
+
+
+        public string Arguments { get; set; }
+
+
+        public Dictionary<string, string> Parameters { get; set; } = new Dictionary<string, string>();
+
+        public List<StateDto> StateHistory { get; set; } = new List<StateDto>();
+
+        public DateTime CreatedAt { get; set; }
     }
 }

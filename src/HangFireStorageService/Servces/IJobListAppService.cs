@@ -1,4 +1,5 @@
-﻿using Microsoft.ServiceFabric.Services.Remoting;
+﻿using Hangfire.ServiceFabric.Dtos;
+using Microsoft.ServiceFabric.Services.Remoting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,5 +15,7 @@ namespace HangFireStorageService.Servces
         Task AddAsync(string key, string value);
 
         Task Remove(string key, string value);
+
+        Task<List<ListDto>> GetListDto(string key);
     }
 }

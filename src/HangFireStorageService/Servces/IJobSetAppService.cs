@@ -1,4 +1,5 @@
-﻿using HangFireStorageService.Dto;
+﻿using Hangfire.ServiceFabric.Dtos;
+using HangFireStorageService.Dto;
 using Microsoft.ServiceFabric.Services.Remoting;
 using System;
 using System.Collections.Generic;

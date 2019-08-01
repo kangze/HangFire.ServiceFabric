@@ -1,4 +1,5 @@
-﻿using HangFireStorageService.Dto;
+﻿using Hangfire.ServiceFabric.Entities;
+using HangFireStorageService.Dto;
 using HangFireStorageService.Extensions;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Data.Collections;
@@ -67,6 +68,37 @@ namespace HangFireStorageService.Servces
                 }
                 return ls;
             }
+        }
+
+        public async Task<List<JobQueueDto>> GetEnqueuedJob(string queue, int from, int perPage)
+        {
+            var queues = await this.GetQueuesAsync(null);
+            var result = queues.Where(u => u.FetchedAt == null && u.Queue == queue)
+                .Skip(from)
+                .Take(perPage)
+                .ToList();
+            return result;
+        }
+
+        public async Task<EnqueuedAndFetchedCountDto> GetEnqueuedAndFetchedCount(string queue)
+        {
+            var queues = await this.GetQueuesAsync(queue);
+            return new EnqueuedAndFetchedCountDto
+            {
+                EnqueuedCount = queues.Count(u => u.FetchedAt == null),
+                FetchedCount = queues.Count(u => u.FetchedAt != null)
+            };
+        }
+
+        public async Task<List<string>> GetFetchedJobIds(string queue, int from, int perPage)
+        {
+            var queues = await this.GetQueuesAsync(null);
+            var result = queues.Where(u => u.FetchedAt != null && u.Queue == queue)
+                .Skip(from)
+                .Take(perPage)
+                .ToList();
+            //TODO:check jobId whether exist
+            return result.Select(u => u.JobId).ToList();
         }
     }
 }

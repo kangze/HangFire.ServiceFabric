@@ -1,4 +1,5 @@
-﻿using HangFireStorageService.Dto;
+﻿using Hangfire.ServiceFabric.Entities;
+using HangFireStorageService.Dto;
 using Microsoft.ServiceFabric.Services.Remoting;
 using System;
 using System.Collections.Generic;
@@ -12,9 +13,22 @@ namespace HangFireStorageService.Servces
     {
         Task<List<JobQueueDto>> GetQueuesAsync(string queue);
 
+        Task<JobQueueDto> GetQueueAsync(string id);
+
         Task DeleteQueueJobAsync(string queue, long jobId);
 
+        Task DeleteQueueJobAsync(string id);
+
+        Task UpdateQueueAsync(JobQueueDto dto);
+
         Task AddToQueueJObAsync(string queue, long jobId);
+
+        Task<List<JobQueueDto>> GetEnqueuedJob(string queue, int from, int perPage);
+
+        Task<List<string>> GetFetchedJobIds(string queue, int from, int perPage);
+
+        Task<EnqueuedAndFetchedCountDto> GetEnqueuedAndFetchedCount(string queue);
+
 
     }
 }

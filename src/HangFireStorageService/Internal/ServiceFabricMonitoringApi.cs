@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Hangfire.Common;
 using Hangfire.ServiceFabric.Dtos;
+using Hangfire.ServiceFabric.Dtos.Internal;
+using Hangfire.ServiceFabric.Entities;
 using Hangfire.States;
 using Hangfire.Storage;
 using Hangfire.Storage.Monitoring;
@@ -46,52 +48,23 @@ namespace HangFireStorageService.Internal
         {
 
             var job_queueus = this._jobQueueAppService.GetQueuesAsync(null).GetAwaiter().GetResult();
-            //var queue_names = job_queueus.Select(u => u.Queue).ToList().Distinct();
             var result = new List<QueueWithTopEnqueuedJobsDto>(job_queueus.Count);
             //需要根据queue进行一次分组
             var groupd_queues = job_queueus.GroupBy(u => u.Queue);
             foreach (var queue in groupd_queues)
             {
-                var queue_jobs = this._jobQueueAppService.GetQueuesAsync(queue.Key).GetAwaiter().GetResult();
-                var enqueueJobIds = queue_jobs
-                  .Where(u => u.FetchedAt == null)
-                  .OrderBy(u => u.JobId)
-                  .Take(5)
-                  .Select(u => u.JobId)
-                  .ToList()
-                  .Distinct();
+                var enqueueJobs = this._jobQueueAppService.GetEnqueuedJob(queue.Key, 0, 5).GetAwaiter().GetResult();
+                var enqueueJobIds = enqueueJobs.Select(u => u.JobId).ToList();
 
-                var jobDetails = this._jobAppService.GetJobDetailsAsync(enqueueJobIds.ToArray()).GetAwaiter().GetResult();
-                var firstJob = Servces.JobHelper.DeserializeJobs(
-                    jobDetails,
-                    (jobDetail, job, stateData) => new EnqueuedJobDto
-                    {
-                        Job = job,
-                        State = jobDetail.StateName,
-                        InEnqueuedState = EnqueuedState.StateName.Equals(jobDetail.StateName, StringComparison.OrdinalIgnoreCase),
-                        EnqueuedAt = EnqueuedState.StateName.Equals(jobDetail.StateName, StringComparison.OrdinalIgnoreCase)
-                            ? jobDetail.StateChanged
-                            : null
-                    });
 
-                var array = queue.ToList();
-                var enqueuedCount = array.Aggregate(0, (a, netx) =>
-                {
-                    if (netx.FetchedAt == null) return ++a;
-                    return 0;
-                });
-                var fetchedCount = array.Aggregate(0, (a, next) =>
-                {
-                    if (next.FetchedAt != null) return ++a;
-                    return 0;
-                });
+                var counters = this._jobQueueAppService.GetEnqueuedAndFetchedCount(queue.Key).GetAwaiter().GetResult();
 
                 result.Add(new QueueWithTopEnqueuedJobsDto()
                 {
                     Name = queue.Key,
-                    Length = enqueuedCount,
-                    Fetched = fetchedCount,
-                    FirstJobs = firstJob
+                    Length = counters.EnqueuedCount ?? 0,
+                    Fetched = counters.FetchedCount,
+                    FirstJobs = EnqueuedJobs(enqueueJobIds)
                 });
             }
             return result;
@@ -116,116 +89,86 @@ namespace HangFireStorageService.Internal
 
         public JobDetailsDto JobDetails(string jobId)
         {
-            var job = this._jobAppService.GetJobAsync(long.Parse(jobId)).GetAwaiter().GetResult();
-            var jobStates = this._jobStateDataAppService.GetStates(long.Parse(jobId)).GetAwaiter().GetResult();
-            var history = jobStates.Select(u => new StateHistoryDto()
+            var job = this._jobAppService.GetJobAsync(jobId).GetAwaiter().GetResult();
+
+            var history = job.StateHistory.Select(u => new StateHistoryDto()
             {
                 StateName = u.Name,
                 CreatedAt = u.CreatedAt,
                 Reason = u.Reason,
-                Data = new Dictionary<string, string>(SerializationHelper.Deserialize<Dictionary<string, string>>(u.Data))
-            }).ToList();
-            var jobData = InvocationData.DeserializePayload(job.InvocationData);
-            if (!string.IsNullOrEmpty(job.Arguments))
-                jobData.Arguments = job.Arguments;
-            var jobEntity = jobData.DeserializeJob();
+                Data = u.Data
+            })
+            .Reverse()
+            .ToList();
             var result = new JobDetailsDto()
             {
                 CreatedAt = job.CreatedAt,
                 ExpireAt = job.ExpireAt,
                 Properties = job.Parameters,
                 History = history,
-                Job = jobEntity
+                Job = DeserializeJob(job.InvocationData, job.Arguments)
             };
             return result;
         }
 
+        private static readonly string[] StatisticsStateNames = new[]
+       {
+            EnqueuedState.StateName,
+            FailedState.StateName,
+            ProcessingState.StateName,
+            ScheduledState.StateName
+        };
+
         public StatisticsDto GetStatistics()
         {
-            var statisticsDto = new StatisticsDto();
+
+            var stats = new StatisticsDto();
             var all_job = this._jobAppService.GetAllJobsAsync().GetAwaiter().GetResult();
-            var all_counter = this._counterAppService.GetAllCounterAsync().GetAwaiter().GetResult();
-            var all_aggregatedCounter = this._aggregatedCounterAppService.GetAllCounterAsync().GetAwaiter().GetResult();
+            var countByStates = all_job
+                .Where(u => StatisticsStateNames.Contains(u.StateName))
+                .GroupBy(u => u.StateName)
+                .ToDictionary(u => u.Key, u => u.Count());
+
+            int GetCountIfExists(string name) => countByStates.ContainsKey(name) ? countByStates[name] : 0;
+
+            stats.Enqueued = GetCountIfExists(EnqueuedState.StateName);
+            stats.Failed = GetCountIfExists(FailedState.StateName);
+            stats.Processing = GetCountIfExists(ProcessingState.StateName);
+            stats.Scheduled = GetCountIfExists(ScheduledState.StateName);
+
             var all_server = this._serverAppService.GetAllServerAsync().GetAwaiter().GetResult();
+            stats.Servers = all_server.Count();
+
+            var all_counter = this._counterAppService.GetAllCounterAsync().GetAwaiter().GetResult();
+
+            var statsSucceeded = $@"stats:{State.Succeeded}";
+            var successCounter = all_counter.FirstOrDefault(u => u.Key == statsSucceeded);
+            stats.Succeeded = successCounter?.Value ?? 0;
+
+            var statsDeleted = $@"stats:{State.Deleted}";
+            var deletedCounter = all_counter.FirstOrDefault(u => u.Key == statsDeleted);
+            stats.Deleted = deletedCounter?.Value ?? 0;
+
             var all_sets = this._jobSetAppService.GetAllSetsAsync().GetAwaiter().GetResult();
-            all_job.ForEach(u =>
-            {
-                if (u.StateName == "Enqueued")
-                    statisticsDto.Enqueued++;
-                else if (u.StateName == "Failed")
-                    statisticsDto.Failed++;
-                else if (u.StateName == "Processing")
-                    statisticsDto.Processing++;
-                else if (u.StateName == "Scheduled")
-                    statisticsDto.Scheduled++;
-            });
-            all_counter.ForEach(u =>
-            {
-                if (u.Key == "stats:succeeded")
-                    statisticsDto.Succeeded++;
-                if (u.Key == "stats:deleted")
-                    statisticsDto.Deleted++;
-            });
-            all_aggregatedCounter.ForEach(u =>
-            {
-                if (u.Key == "stats:succeeded")
-                    statisticsDto.Succeeded++;
-                if (u.Key == "stats:deleted")
-                    statisticsDto.Deleted++;
-            });
-            statisticsDto.Servers = all_server.Count();
-            statisticsDto.Recurring = all_sets.Count(u => u.Key == "recurring-jobs");
-            return statisticsDto;
+            stats.Recurring = all_sets.Count(u => u.Key.Contains("recurring-jobs"));
+
+            var queues = this._jobQueueAppService.GetQueuesAsync(null).GetAwaiter().GetResult();
+            stats.Queues = queues.Count;
+
+            return stats;
         }
 
         public JobList<EnqueuedJobDto> EnqueuedJobs(string queue, int @from, int perPage)
         {
-            var job_queueus = this._jobQueueAppService.GetQueuesAsync(queue).GetAwaiter().GetResult();
-            var enqueueJobIds = job_queueus
-                  .Where(u => u.FetchedAt == null)
-                  .OrderBy(u => u.JobId)
-                  .Skip(from)
-                  .Take(from + perPage - 1)
-                  .Select(u => u.JobId)
-                  .ToList();
-            var jobDetails = this._jobAppService.GetJobDetailsAsync(enqueueJobIds.ToArray()).GetAwaiter().GetResult();
-            return Servces.JobHelper.DeserializeJobs(
-                jobDetails,
-                (jobDetail, job, stateData) => new EnqueuedJobDto
-                {
-                    Job = job,
-                    State = jobDetail.StateName,
-                    InEnqueuedState = EnqueuedState.StateName.Equals(jobDetail.StateName, StringComparison.OrdinalIgnoreCase),
-                    EnqueuedAt = EnqueuedState.StateName.Equals(jobDetail.StateName, StringComparison.OrdinalIgnoreCase)
-                        ? jobDetail.StateChanged
-                        : null
-                });
+            var enqueuedJobs = this._jobQueueAppService.GetEnqueuedJob(queue, from, perPage).GetAwaiter().GetResult();
+            return this.EnqueuedJobs(enqueuedJobs.Select(u => u.JobId).ToArray());
         }
 
         public JobList<FetchedJobDto> FetchedJobs(string queue, int @from, int perPage)
         {
-            var job_queueus = this._jobQueueAppService.GetQueuesAsync(queue).GetAwaiter().GetResult();
-            var enqueueJobIds = job_queueus
-                  .Where(u => u.FetchedAt != null)
-                  .OrderBy(u => u.JobId)
-                  .Skip(from)
-                  .Take(from + perPage - 1)
-                  .Select(u => u.JobId)
-                  .ToList();
-            var jobDetails = this._jobAppService.GetJobDetailsAsync(enqueueJobIds.ToArray()).GetAwaiter().GetResult();
+            var fetchedJobIds = this._jobQueueAppService.GetFetchedJobIds(queue, from, perPage).GetAwaiter().GetResult();
 
-            var result = new List<KeyValuePair<string, FetchedJobDto>>(jobDetails.Count);
-            foreach (var job in jobDetails)
-            {
-                result.Add(new KeyValuePair<string, FetchedJobDto>(
-                    job.Id.ToString(),
-                    new FetchedJobDto
-                    {
-                        Job = Servces.JobHelper.DeserializeJob(job.InvocationData, job.Arguments),
-                        State = job.StateName,
-                    }));
-            }
-            return new JobList<FetchedJobDto>(result);
+            return FetchedJobs(fetchedJobIds);
 
         }
 
@@ -306,8 +249,7 @@ namespace HangFireStorageService.Internal
 
         public long ScheduledCount()
         {
-            var count = this._jobAppService.GetNumberbyStateName(ScheduledState.StateName).GetAwaiter().GetResult();
-            return count;
+            return GetNumberOfJobsByStateName(ScheduledState.StateName);
         }
 
         public long EnqueuedCount(string queue)
@@ -332,26 +274,22 @@ namespace HangFireStorageService.Internal
 
         public long FailedCount()
         {
-            var count = this._jobAppService.GetNumberbyStateName(FailedState.StateName).GetAwaiter().GetResult();
-            return count;
+            return GetNumberOfJobsByStateName(FailedState.StateName);
         }
 
         public long ProcessingCount()
         {
-            var count = this._jobAppService.GetNumberbyStateName(ProcessingState.StateName).GetAwaiter().GetResult();
-            return count;
+            return GetNumberOfJobsByStateName(ProcessingState.StateName);
         }
 
         public long SucceededListCount()
         {
-            var count = this._jobAppService.GetNumberbyStateName(SucceededState.StateName).GetAwaiter().GetResult();
-            return count;
+            return GetNumberOfJobsByStateName(SucceededState.StateName);
         }
 
         public long DeletedListCount()
         {
-            var count = this._jobAppService.GetNumberbyStateName(DeletedState.StateName).GetAwaiter().GetResult();
-            return count;
+            return GetNumberOfJobsByStateName(DeletedState.StateName);
         }
 
         public IDictionary<DateTime, long> SucceededByDatesCount()
@@ -425,46 +363,150 @@ namespace HangFireStorageService.Internal
         int from,
         int count,
         string stateName,
-        Func<JobDto, Job, Dictionary<string, string>, TDto> selector)
+        Func<JobSummary, Job, Dictionary<string, string>, TDto> selector)
         {
             var all_jobs = this._jobAppService.GetAllJobsAsync().GetAwaiter().GetResult();
-            var all_states = this._jobStateDataAppService.GetAllStateAsync().GetAwaiter().GetResult();
-            //var jobs = all_jobs.Where(u => u.StateName == stateName).OrderByDescending(u => u.Id).Skip(from).Take(count).ToList();
-            //var jobIds = jobs.Select(u => u.Id).ToList();
-            //var stateIds = jobs.Select(u => u.StateId).ToList();
-            //var states=all_states.Where(u=>jobIds.Contains(u.JobId)&&stateIds.Contains(u.Id)
 
-            var query = from job in all_jobs
-                        from state in all_states
-                        where job.StateName == stateName &&
-                        job.Id == state.JobId &&
-                        job.StateId == state.Id
-                        select new { job, state };
-            var jobs = query.OrderByDescending(u => u.job.Id).Skip(from).Take(count).ToList();
+            var jobs = all_jobs.Where(u => u.StateName == stateName).ToList();
+            jobs = jobs.OrderBy(u => u.Id).Skip(from).Take(count).ToList();
+
+            var joinedJobs = jobs
+                .Select(job =>
+                {
+                    var state = job.StateHistory.LastOrDefault(s => s.Name == stateName);
+                    return new JobSummary
+                    {
+                        Id = job.Id.ToString(),
+                        InvocationData = job.InvocationData,
+                        Arguments = job.Arguments,
+                        CreatedAt = job.CreatedAt,
+                        ExpireAt = job.ExpireAt,
+                        FetchedAt = null,
+                        StateName = job.StateName,
+                        StateReason = state?.Reason,
+                        StateData = state?.Data
+                    };
+                })
+                .ToList();
+
+            return DeserializeJobs(joinedJobs, selector);
+        }
+
+        private JobList<FetchedJobDto> FetchedJobs(IEnumerable<string> jobIds)
+        {
+            var jobs = this._jobAppService.GetJobDetailsAsync(jobIds.ToArray()).GetAwaiter().GetResult();
+            List<JobSummary> joinedJobs = jobs
+                .Select(job =>
+                {
+                    var state = job.StateHistory.LastOrDefault(s => s.Name == job.StateName);
+                    return new JobSummary
+                    {
+                        Id = job.Id.ToString(),
+                        InvocationData = job.InvocationData,
+                        Arguments = job.Arguments,
+                        CreatedAt = job.CreatedAt,
+                        ExpireAt = job.ExpireAt,
+                        FetchedAt = null,
+                        StateName = job.StateName,
+                        StateReason = state?.Reason,
+                        StateData = state?.Data
+                    };
+                })
+                .ToList();
+            var result = new List<KeyValuePair<string, FetchedJobDto>>(joinedJobs.Count);
+
+            foreach (var job in joinedJobs)
+            {
+                result.Add(new KeyValuePair<string, FetchedJobDto>(job.Id,
+                    new FetchedJobDto
+                    {
+                        Job = DeserializeJob(job.InvocationData, job.Arguments),
+                        State = job.StateName,
+                        FetchedAt = job.FetchedAt
+                    }));
+            }
+            return new JobList<FetchedJobDto>(result);
+
+        }
+
+        private JobList<EnqueuedJobDto> EnqueuedJobs(IEnumerable<string> jobIds)
+        {
+            var jobDetails = this._jobAppService.GetJobDetailsAsync(jobIds.ToArray()).GetAwaiter().GetResult();
+
+            var jobQueues = this._jobQueueAppService.GetQueuesAsync(null).GetAwaiter().GetResult();
+            var enqueuedJobs = from queue in jobQueues
+                               where jobIds.Contains(queue.JobId) &&
+                               queue.FetchedAt == null
+                               select queue;
+            var jobsFiltered = enqueuedJobs
+               .Select(jq => jobDetails.FirstOrDefault(job => job.Id == jq.JobId));
+
+            var joinedJobs = jobsFiltered
+               .Where(job => job != null)
+               .Select(job =>
+               {
+                   var state = job.StateHistory.LastOrDefault();
+                   return new JobSummary
+                   {
+                       Id = job.Id.ToString(),
+                       InvocationData = job.InvocationData,
+                       Arguments = job.Arguments,
+                       CreatedAt = job.CreatedAt,
+                       ExpireAt = job.ExpireAt,
+                       FetchedAt = null,
+                       StateName = job.StateName,
+                       StateReason = state?.Reason,
+                       StateData = state?.Data
+                   };
+               })
+               .ToList();
+            return DeserializeJobs(
+                joinedJobs,
+                (sqlJob, job, stateData) => new EnqueuedJobDto
+                {
+                    Job = job,
+                    State = sqlJob.StateName,
+                    EnqueuedAt = sqlJob.StateName == EnqueuedState.StateName
+                        ? Hangfire.Common.JobHelper.DeserializeNullableDateTime(stateData["EnqueuedAt"])
+                        : null
+                });
+        }
+
+        private long GetNumberOfJobsByStateName(string stateName)
+        {
+            var all_job = this._jobAppService.GetAllJobsAsync().GetAwaiter().GetResult();
+            var count = all_job.Count(u => u.StateName == stateName);
+            return count;
+        }
+
+        private static JobList<TDto> DeserializeJobs<TDto>(ICollection<JobSummary> jobs,
+            Func<JobSummary, Job, Dictionary<string, string>, TDto> selector)
+        {
             var result = new List<KeyValuePair<string, TDto>>(jobs.Count);
+
             foreach (var job in jobs)
             {
-                var dto = default(TDto);
-
-                if (job.job.InvocationData != null)
-                {
-                    var deserializedData = SerializationHelper.Deserialize<Dictionary<string, string>>(job.state.Data);
-                    var stateData = deserializedData != null
-                        ? new Dictionary<string, string>(deserializedData, StringComparer.OrdinalIgnoreCase)
-                        : null;
-                    var data = InvocationData.DeserializePayload(job.job.InvocationData);
-                    if (!string.IsNullOrEmpty(job.job.Arguments))
-                    {
-                        data.Arguments = job.job.Arguments;
-                    }
-                    var jobEntity = data.DeserializeJob();
-                    dto = selector(job.job, jobEntity, stateData);
-                }
-
-                result.Add(new KeyValuePair<string, TDto>(
-                    job.job.Id.ToString(), dto));
+                var stateData = job.StateData;
+                var dto = selector(job, DeserializeJob(job.InvocationData, job.Arguments), stateData);
+                result.Add(new KeyValuePair<string, TDto>(job.Id, dto));
             }
+
             return new JobList<TDto>(result);
+        }
+
+        private static Job DeserializeJob(string invocationData, string arguments)
+        {
+            var data = Hangfire.Common.JobHelper.FromJson<InvocationData>(invocationData);
+            data.Arguments = arguments;
+
+            try
+            {
+                return data.Deserialize();
+            }
+            catch (JobLoadException)
+            {
+                return null;
+            }
         }
     }
 }

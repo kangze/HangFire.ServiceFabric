@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HangFireStorageService.Dto
+namespace Hangfire.ServiceFabric.Dtos
 {
     public class SetDto
     {
-        public long Id { get; set; }
+        public string Id { get; set; }
 
         public string Key { get; set; }
 

@@ -1,4 +1,5 @@
-﻿using HangFireStorageService.Dto;
+﻿using Hangfire.ServiceFabric.Dtos;
+using HangFireStorageService.Dto;
 using Microsoft.ServiceFabric.Services.Remoting;
 using System;
 using System.Collections.Generic;
@@ -15,5 +16,7 @@ namespace HangFireStorageService.Servces
         Task AddAsync(string key, TimeSpan? expireIn);
 
         Task DeleteAsync(string key, TimeSpan? expireIn);
+
+        Task<CounterDto> GetCounterAsync(string key);
     }
 }

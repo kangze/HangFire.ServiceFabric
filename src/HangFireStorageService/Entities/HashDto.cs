@@ -8,13 +8,12 @@ namespace HangFireStorageService.Dto
 {
     public class HashDto
     {
+        public string Id { get; set; }
 
         public string Key { get; set; }
 
-        public string Field { get; set; }
+        public Dictionary<string, string> Fields { get; set; }
 
-        public string Value { get; set; }
-
-        public DateTime ExpireAt { get; set; }
+        public DateTime? ExpireAt { get; set; }
     }
 }

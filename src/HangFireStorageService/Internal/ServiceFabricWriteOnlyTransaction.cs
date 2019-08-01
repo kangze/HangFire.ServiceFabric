@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Hangfire.Common;
+using Hangfire.ServiceFabric.Dtos;
 using Hangfire.States;
 using Hangfire.Storage;
 using HangFireStorageService.Dto;
@@ -65,19 +66,73 @@ namespace HangFireStorageService.Internal
         {
             this._jobActions.Add((jobAppService) =>
             {
-                var job = jobAppService.GetJobAsync(long.Parse(jobId)).GetAwaiter().GetResult();
+                var job = jobAppService.GetJobAsync(jobId).GetAwaiter().GetResult();
                 job.ExpireAt = DateTime.UtcNow.Add(expireIn);
-                jobAppService.UpdateJobAsync(job).GetAwaiter().GetResult();
+                jobAppService.AddOrUpdateAsync(job).GetAwaiter().GetResult();
             });
+        }
+
+        public string CreateExpiredJob(Job job, IDictionary<string, string> parameters, DateTime createdAt,
+            TimeSpan expireIn)
+        {
+            if (job == null)
+                throw new ArgumentNullException(nameof(job));
+
+            if (parameters == null)
+                throw new ArgumentNullException(nameof(parameters));
+
+            var invocationData = InvocationData.Serialize(job);
+
+            var jobDto = new JobDto
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                InvocationData = Hangfire.Common.JobHelper.ToJson(invocationData),
+                Arguments = invocationData.Arguments,
+                Parameters = parameters.ToDictionary(kv => kv.Key, kv => kv.Value),
+                CreatedAt = createdAt,
+                ExpireAt = createdAt.Add(expireIn)
+            };
+
+            this._jobActions.Add((jobAppService) =>
+            {
+                jobAppService.AddOrUpdateAsync(jobDto).GetAwaiter().GetResult();
+            });
+
+            return jobDto.Id;
+        }
+
+        public void SetJobParameter(string id, string name, string value)
+        {
+            if (id == null)
+            {
+                throw new ArgumentNullException(nameof(id));
+            }
+
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            var jobDto = this._jobAppService.GetJobAsync(id).GetAwaiter().GetResult();
+            if (jobDto == null)
+                return;
+            if (!string.IsNullOrEmpty(name) && jobDto.Parameters.ContainsKey(name))
+            {
+                jobDto.Parameters[name] = value;
+                this._jobActions.Add((jobAppService) =>
+                {
+                    jobAppService.AddOrUpdateAsync(jobDto).GetAwaiter().GetResult();
+                });
+            }
         }
 
         public override void PersistJob(string jobId)
         {
             this._jobActions.Add((jobAppService) =>
             {
-                var job = jobAppService.GetJobAsync(long.Parse(jobId)).GetAwaiter().GetResult();
+                var job = jobAppService.GetJobAsync(jobId).GetAwaiter().GetResult();
                 job.ExpireAt = null;
-                jobAppService.UpdateJobAsync(job).GetAwaiter().GetResult();
+                jobAppService.AddOrUpdateAsync(job).GetAwaiter().GetResult();
             });
         }
 
@@ -85,29 +140,34 @@ namespace HangFireStorageService.Internal
         {
             this._jobActions.Add((jobAppService) =>
             {
-                jobAppService.SetJobStateAsync(long.Parse(jobId), new StateDto()
+                var job = jobAppService.GetJobAsync(jobId).GetAwaiter().GetResult();
+                var stateDto = new StateDto
                 {
-                    CreatedAt = DateTime.UtcNow,
-                    Data = SerializationHelper.Serialize(state.SerializeData()),
-                    Reason = state.Reason?.Substring(0, Math.Min(99, state.Reason.Length)),
                     Name = state.Name,
-                    JobId = long.Parse(jobId)
-                }).GetAwaiter().GetResult();
+                    Reason = state.Reason,
+                    CreatedAt = DateTime.UtcNow,
+                    Data = state.SerializeData()
+                };
+                job.StateHistory.Add(stateDto);
+                job.StateName = state.Name;
+                jobAppService.AddOrUpdateAsync(job).GetAwaiter().GetResult();
             });
         }
 
         public override void AddJobState(string jobId, IState state)
         {
-            this._jobStateDataActions.Add((jobStateDataAppService) =>
+            this._jobActions.Add((jobAppService) =>
             {
-                jobStateDataAppService.AddStateAsync(long.Parse(jobId), new StateDto()
+                var job = jobAppService.GetJobAsync(jobId).GetAwaiter().GetResult();
+                var stateDto = new StateDto
                 {
-                    CreatedAt = DateTime.UtcNow,
-                    Data = SerializationHelper.Serialize(state.SerializeData()),
-                    Reason = state.Reason?.Substring(0, Math.Min(99, state.Reason.Length)),
                     Name = state.Name,
-                    JobId = long.Parse(jobId)
-                });
+                    Reason = state.Reason,
+                    CreatedAt = DateTime.UtcNow,
+                    Data = state.SerializeData()
+                };
+                job.StateHistory.Add(stateDto);
+                jobAppService.AddOrUpdateAsync(job).GetAwaiter().GetResult();
             });
         }
 
