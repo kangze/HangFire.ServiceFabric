@@ -15,7 +15,7 @@ namespace HangFireStorageService.Servces
 
         Task AddAsync(string key, TimeSpan? expireIn);
 
-        Task DeleteAsync(string key, TimeSpan? expireIn);
+        Task DecrementAsync(string key, TimeSpan? expireIn);
 
         Task<CounterDto> GetCounterAsync(string key);
     }

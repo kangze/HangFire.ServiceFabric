@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Hangfire.ServiceFabric.Dtos;
 using HangFireStorageService.Dto;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Data.Collections;
@@ -20,32 +21,30 @@ namespace HangFireStorageService.Servces
 
         public async Task AddAsync(string key, TimeSpan? expireIn)
         {
-            var counter_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, CounterDto>>(Consts.COUNTER);
+            var counter_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, CounterDto>>(Consts.COUNTER);
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var dto = new CounterDto();
-                var count = await counter_dict.GetCountAsync(tx);
-                dto.Id = count + 1;
+                dto.Id = Guid.NewGuid().ToString("N");
                 dto.Key = key;
                 dto.Value = 1;
                 dto.ExpireAt = expireIn.HasValue ? (DateTime?)DateTime.UtcNow.Add(expireIn.Value) : null;
-                await counter_dict.SetAsync(tx, count + 1, dto);
+                await counter_dict.SetAsync(tx, dto.Id, dto);
                 await tx.CommitAsync();
             }
         }
 
-        public async Task DeleteAsync(string key, TimeSpan? expireIn)
+        public async Task DecrementAsyncAsync(string key, TimeSpan? expireIn)
         {
-            var counter_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, CounterDto>>(Consts.COUNTER);
+            var counter_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, CounterDto>>(Consts.COUNTER);
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var dto = new CounterDto();
-                var count = await counter_dict.GetCountAsync(tx);
-                dto.Id = count + 1;
+                dto.Id = Guid.NewGuid().ToString("N");
                 dto.Key = key;
                 dto.Value = -1;
                 dto.ExpireAt = expireIn.HasValue ? (DateTime?)DateTime.UtcNow.Add(expireIn.Value) : null;
-                await counter_dict.SetAsync(tx, count + 1, dto);
+                await counter_dict.SetAsync(tx, dto.Id, dto);
                 await tx.CommitAsync();
             }
         }
