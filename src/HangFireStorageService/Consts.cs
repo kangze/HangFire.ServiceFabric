@@ -17,5 +17,6 @@ namespace HangFireStorageService
         public static string AGGREGATEDCOUNTER = "{0}_AGGREGATEDCOUNTER_DICT";
         public static string COUNTER = "{0}_COUNTER_DICT";
         public static string LIST_DICT = "{0}_LIST_DICT";
+        public static string LOCK_DICT = "{0}_LOCK_DICT";
     }
 }

@@ -57,10 +57,7 @@ namespace HangFireStorageService.Internal
             return new ServiceFabricWriteOnlyTransaction(this._jobQueueAppService, this._jobAppService, this._serverAppService, this._counterAppService, this._aggregatedCounterAppService, this._jobSetsAppService, this._hashAppService, this._jobListAppService);
         }
 
-        public override void Dispose()
-        {
-
-        }
+        public override void Dispose() { }
 
         public override IWriteOnlyTransaction CreateWriteTransaction()
         {
@@ -69,8 +66,7 @@ namespace HangFireStorageService.Internal
 
         public override IDisposable AcquireDistributedLock(string resource, TimeSpan timeout)
         {
-            var locker = new ServicesFabricDistributedLock(null, resource, timeout);
-            return locker.AcquireLock().GetAwaiter().GetResult();
+            return ServiceFabricDistributedLock.AcquireLock(resource, timeout);
         }
 
         public override string CreateExpiredJob(Job job, IDictionary<string, string> parameters, DateTime createdAt, TimeSpan expireIn)
