@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 
 namespace Hangfire.ServiceFabric.Servces
 {
+    /// <summary>
+    /// DistruibuteLock Imp,If throw Timeout Exception,beacause of gain lock failed
+    /// </summary>
     public class ResourceLockAppService : IResourceLockAppService
     {
         private readonly IReliableStateManager _stateManager;

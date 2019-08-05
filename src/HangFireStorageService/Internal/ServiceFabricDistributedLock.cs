@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Hangfire.ServiceFabric.Servces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,28 +12,31 @@ namespace Hangfire.ServiceFabric.Internal
     {
         private readonly string _resource;
         private readonly Guid _lockId;
+        private readonly IResourceLockAppService _resourceLockAppService;
 
         private readonly static Dictionary<string, HashSet<Guid>> _lockedResources = new Dictionary<string, HashSet<Guid>>();
 
-        public ServiceFabricDistributedLock(string resource, Guid lockId)
+        public ServiceFabricDistributedLock(string resource, IResourceLockAppService resourceLockAppService)
         {
             _resource = resource;
-            _lockId = lockId;
+            _lockId = Guid.NewGuid();
+            _resourceLockAppService = resourceLockAppService;
         }
 
-        public static IDisposable AcquireLock(string resource, TimeSpan timeout)
+        public IDisposable AcquireLock()
         {
             var lockId = Guid.NewGuid();
 
-            if (!_lockedResources.ContainsKey(resource))
+            if (!_lockedResources.ContainsKey(_resource))
             {
-                //Lock Resource By ServiceFabric
+
                 //SqlServerDistributedLock.Acquire(_dedicatedConnection, resource, timeout);
-                _lockedResources.Add(resource, new HashSet<Guid>());
+                this._resourceLockAppService.LockAsync(this._resource).GetAwaiter().GetResult();
+                _lockedResources.Add(_resource, new HashSet<Guid>());
             }
 
-            _lockedResources[resource].Add(lockId);
-            return new ServiceFabricDistributedLock(resource, lockId);
+            _lockedResources[_resource].Add(lockId);
+            return this;
         }
 
         public void Dispose()

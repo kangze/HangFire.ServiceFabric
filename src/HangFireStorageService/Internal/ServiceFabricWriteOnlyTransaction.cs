@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Hangfire.Common;
 using Hangfire.ServiceFabric.Dtos;
+using Hangfire.ServiceFabric.Internal;
 using Hangfire.States;
 using Hangfire.Storage;
 using HangFireStorageService.Dto;
@@ -14,16 +15,7 @@ namespace HangFireStorageService.Internal
 {
     public class ServiceFabricWriteOnlyTransaction : JobStorageTransaction
     {
-
-        private readonly IJobQueueAppService _jobQueueAppService;
-        private readonly IJobAppService _jobAppService;
-        private readonly IServerAppService _serverAppService;
-        private readonly ICounterAppService _counterAppService;
-        private readonly IAggregatedCounterAppService _aggregatedCounterAppService;
-        private readonly IJobSetAppService _jobSetAppService;
-        private readonly IHashAppService _hashAppService;
-        private readonly IListAppService _jobListAppService;
-
+        private readonly IServiceFabriceStorageServices _services;
 
         private readonly List<Action<IHashAppService>> _hashActions = new List<Action<IHashAppService>>();
         private readonly List<Action<IJobAppService>> _jobActions = new List<Action<IJobAppService>>();
@@ -33,26 +25,9 @@ namespace HangFireStorageService.Internal
         private readonly List<Action<IListAppService>> _jobListAppActions = new List<Action<IListAppService>>();
 
 
-
-        public ServiceFabricWriteOnlyTransaction(
-            IJobQueueAppService jobQueueAppService,
-            IJobAppService jobAppService,
-            IServerAppService serverAppService,
-            ICounterAppService counterAppService,
-            IAggregatedCounterAppService aggregatedCounterAppService,
-            IJobSetAppService jobSetAppService,
-            IHashAppService hashAppService,
-            IListAppService jobListAppService
-            )
+        public ServiceFabricWriteOnlyTransaction(IServiceFabriceStorageServices servies)
         {
-            this._jobQueueAppService = jobQueueAppService;
-            this._serverAppService = serverAppService;
-            this._counterAppService = counterAppService;
-            this._aggregatedCounterAppService = aggregatedCounterAppService;
-            this._jobSetAppService = jobSetAppService;
-            this._jobAppService = jobAppService;
-            this._hashAppService = hashAppService;
-            this._jobListAppService = jobListAppService;
+            this._services = servies;
         }
 
         public override void ExpireJob(string jobId, TimeSpan expireIn)
@@ -106,7 +81,7 @@ namespace HangFireStorageService.Internal
                 throw new ArgumentNullException(nameof(name));
             }
 
-            var jobDto = this._jobAppService.GetJobAsync(id).GetAwaiter().GetResult();
+            var jobDto = this._services.JobAppService.GetJobAsync(id).GetAwaiter().GetResult();
             if (jobDto == null)
                 return;
             if (!string.IsNullOrEmpty(name) && jobDto.Parameters.ContainsKey(name))
@@ -282,12 +257,12 @@ namespace HangFireStorageService.Internal
 
         public override void Commit()
         {
-            this._hashActions.ForEach(u => u.Invoke(this._hashAppService));
-            this._jobActions.ForEach(u => u.Invoke(this._jobAppService));
-            this._jobQueueActions.ForEach(u => u.Invoke(this._jobQueueAppService));
-            this._counterAppActions.ForEach(u => u.Invoke(this._counterAppService));
-            this._jobSetAppActions.ForEach(u => u.Invoke(this._jobSetAppService));
-            this._jobListAppActions.ForEach(u => u.Invoke(this._jobListAppService));
+            this._hashActions.ForEach(u => u.Invoke(this._services.HashAppService));
+            this._jobActions.ForEach(u => u.Invoke(this._services.JobAppService));
+            this._jobQueueActions.ForEach(u => u.Invoke(this._services.JobQueueAppService));
+            this._counterAppActions.ForEach(u => u.Invoke(this._services.CounterAppService));
+            this._jobSetAppActions.ForEach(u => u.Invoke(this._services.JobSetAppService));
+            this._jobListAppActions.ForEach(u => u.Invoke(this._services.ListAppService));
         }
     }
 }

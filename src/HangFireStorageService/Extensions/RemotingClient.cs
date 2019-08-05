@@ -1,4 +1,6 @@
-﻿using HangFireStorageService.Servces;
+﻿using Hangfire.ServiceFabric.Internal;
+using Hangfire.ServiceFabric.Servces;
+using HangFireStorageService.Servces;
 using Microsoft.ServiceFabric.Services.Client;
 using Microsoft.ServiceFabric.Services.Remoting.Client;
 using Microsoft.ServiceFabric.Services.Remoting.V2.FabricTransport.Client;
@@ -20,8 +22,8 @@ namespace HangFireStorageService.Extensions
         private static ServiceProxyFactory proxyFactory = new ServiceProxyFactory((c) =>
            new FabricTransportServiceRemotingClientFactory());
         private static FabricClient fabricClient = new FabricClient();
-
         public static string ApplicationUri { get; set; }
+
 
         public static IJobAppService CreateJobAppService()
         {
@@ -71,6 +73,27 @@ namespace HangFireStorageService.Extensions
         {
             var uri = new Uri(ApplicationUri);
             return proxyFactory.CreateServiceProxy<IListAppService>(uri, listenerName: Constants.ListenerNames_jobListAppSerivce);
+        }
+        public static IResourceLockAppService CreateResourceLockAppService()
+        {
+            var uri = new Uri(ApplicationUri);
+            return proxyFactory.CreateServiceProxy<IResourceLockAppService>(uri, listenerName: Constants.ListenerNames_ResourceLockAppService);
+        }
+
+        public static IServiceFabriceStorageServices CreateServiceFabricStorageServices()
+        {
+            var service = new ServiceFabriceStorageServices(
+                CreateJobQueueAppService(),
+                CreateJobAppService(),
+                CreateServiceAppService(),
+                CreateCounterAppService(),
+                CreateAggregateCounterAppService(),
+                CreateJobSetAppService(),
+                CreateHashAppService(),
+                CreateJobListAppService(),
+                CreateResourceLockAppService()
+                );
+            return service;
         }
     }
 }
