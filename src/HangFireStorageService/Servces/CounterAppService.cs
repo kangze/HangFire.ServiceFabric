@@ -5,23 +5,26 @@ using System.Text;
 using System.Threading.Tasks;
 using Hangfire.ServiceFabric.Dtos;
 using HangFireStorageService.Dto;
+using HangFireStorageService.Extensions;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Data.Collections;
 
-namespace HangFireStorageService.Servces
+namespace Hangfire.ServiceFabric.Servces
 {
     public class CounterAppService : ICounterAppService
     {
         private readonly IReliableStateManager _stateManager;
+        private readonly ServiceFabricOptions _option;
 
-        public CounterAppService(IReliableStateManager stateManager)
+        public CounterAppService(IReliableStateManager stateManager, ServiceFabricOptions option)
         {
             this._stateManager = stateManager;
+            this._option = option;
         }
 
         public async Task AddAsync(string key, TimeSpan? expireIn)
         {
-            var counter_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, CounterDto>>(Consts.COUNTER);
+            var counter_dict = await GetCounterDtosDictAsync();
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var dto = new CounterDto();
@@ -36,7 +39,7 @@ namespace HangFireStorageService.Servces
 
         public async Task DecrementAsync(string key, long amount, TimeSpan? expireIn)
         {
-            var counter_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, CounterDto>>(Consts.COUNTER);
+            var counter_dict =  await GetCounterDtosDictAsync();
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var enumlater = (await counter_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
@@ -86,7 +89,7 @@ namespace HangFireStorageService.Servces
 
         public async Task<List<CounterDto>> GetAllCounterAsync()
         {
-            var counter_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, CounterDto>>(Consts.COUNTER);
+            var counter_dict = await GetCounterDtosDictAsync();
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var ls = new List<CounterDto>();
@@ -102,6 +105,12 @@ namespace HangFireStorageService.Servces
         public Task<CounterDto> GetCounterAsync(string key)
         {
             throw new NotImplementedException();
+        }
+
+        private async Task<IReliableDictionary2<string, CounterDto>> GetCounterDtosDictAsync()
+        {
+            var counter_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, CounterDto>>(string.Format(Consts.COUNTER, this._option.Prefix));
+            return counter_dict;
         }
     }
 }

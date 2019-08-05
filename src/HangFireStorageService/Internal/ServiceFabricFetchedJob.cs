@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hangfire.Common;
+using Hangfire.ServiceFabric.Servces;
 using Hangfire.Storage;
 using HangFireStorageService.Dto;
-using HangFireStorageService.Servces;
 
 namespace HangFireStorageService.Internal
 {

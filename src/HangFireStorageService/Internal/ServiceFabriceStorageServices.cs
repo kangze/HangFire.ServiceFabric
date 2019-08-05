@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Hangfire.ServiceFabric.Servces;
-using HangFireStorageService.Servces;
 
 namespace Hangfire.ServiceFabric.Internal
 {

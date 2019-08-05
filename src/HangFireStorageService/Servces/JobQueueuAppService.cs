@@ -9,22 +9,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HangFireStorageService.Servces
+namespace Hangfire.ServiceFabric.Servces
 {
     public class JobQueueuAppService : IJobQueueAppService
     {
         private readonly IReliableStateManager _stateManager;
-        private readonly ServiceFabricOptions _options;
+        private readonly ServiceFabricOptions _option;
 
-        public JobQueueuAppService(IReliableStateManager stateManager, ServiceFabricOptions options)
+        public JobQueueuAppService(IReliableStateManager stateManager, ServiceFabricOptions option)
         {
             this._stateManager = stateManager;
-            this._options = options;
+            this._option = option;
         }
 
         public async Task AddToQueueJObAsync(string queue, string jobId)
         {
-            var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobQueueDto>>(string.Format(Consts.JOBQUEUE_DICT, this._options.Prefix));
+            var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobQueueDto>>(string.Format(Consts.JOBQUEUE_DICT, this._option.Prefix));
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var dto = new JobQueueDto()
@@ -40,7 +40,7 @@ namespace HangFireStorageService.Servces
 
         public async Task DeleteQueueJobAsync(string queue, string jobId)
         {
-            var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobQueueDto>>(string.Format(Consts.JOBQUEUE_DICT, this._options.Prefix));
+            var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobQueueDto>>(string.Format(Consts.JOBQUEUE_DICT, this._option.Prefix));
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var enumerator = (await queues_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
@@ -60,7 +60,7 @@ namespace HangFireStorageService.Servces
 
         public async Task<List<JobQueueDto>> GetQueuesAsync(string queue)
         {
-            var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, List<JobQueueDto>>>(string.Format(Consts.JOBQUEUE_DICT, this._options.Prefix));
+            var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, List<JobQueueDto>>>(string.Format(Consts.JOBQUEUE_DICT, this._option.Prefix));
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var enumerator = (await queues_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
@@ -109,7 +109,7 @@ namespace HangFireStorageService.Servces
 
         public async Task<JobQueueDto> GetQueueAsync(string id)
         {
-            var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobQueueDto>>(string.Format(Consts.JOBQUEUE_DICT, this._options.Prefix));
+            var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobQueueDto>>(string.Format(Consts.JOBQUEUE_DICT, this._option.Prefix));
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var condition_value = await queues_dict.TryGetValueAsync(tx, id);
@@ -121,7 +121,7 @@ namespace HangFireStorageService.Servces
 
         public async Task DeleteQueueJobAsync(string id)
         {
-            var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobQueueDto>>(string.Format(Consts.JOBQUEUE_DICT, this._options.Prefix));
+            var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobQueueDto>>(string.Format(Consts.JOBQUEUE_DICT, this._option.Prefix));
             using (var tx = this._stateManager.CreateTransaction())
             {
                 await queues_dict.TryRemoveAsync(tx, id);
@@ -131,7 +131,7 @@ namespace HangFireStorageService.Servces
 
         public async Task UpdateQueueAsync(JobQueueDto dto)
         {
-            var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobQueueDto>>(string.Format(Consts.JOBQUEUE_DICT, this._options.Prefix));
+            var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobQueueDto>>(string.Format(Consts.JOBQUEUE_DICT, this._option.Prefix));
             using (var tx = this._stateManager.CreateTransaction())
             {
                 await queues_dict.SetAsync(tx, dto.Id, dto);

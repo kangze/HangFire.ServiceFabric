@@ -4,23 +4,26 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HangFireStorageService.Dto;
+using HangFireStorageService.Extensions;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Data.Collections;
 
-namespace HangFireStorageService.Servces
+namespace Hangfire.ServiceFabric.Servces
 {
     public class HashAppService : IHashAppService
     {
         private readonly IReliableStateManager _stateManager;
+        private readonly ServiceFabricOptions _option;
 
-        public HashAppService(IReliableStateManager stateManager)
+        public HashAppService(IReliableStateManager stateManager, ServiceFabricOptions option)
         {
-            _stateManager = stateManager;
+            this._stateManager = stateManager;
+            this._option = option;
         }
 
         public async Task RemoveAsync(string key)
         {
-            var hash_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, List<HashDto>>>(Consts.HASH_DICT);
+            var hash_dict = await GetHashDtosDictAsync();
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var hash_condition = await hash_dict.TryGetValueAsync(tx, key);
@@ -34,14 +37,14 @@ namespace HangFireStorageService.Servces
 
         public async Task<List<HashDto>> GetAllHashAsync()
         {
-            var hash_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, List<HashDto>>>(Consts.HASH_DICT);
+            var hash_dict = await GetHashDtosDictAsync();
             var ls = new List<HashDto>();
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var emulator = (await hash_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
                 while (await emulator.MoveNextAsync(default))
                 {
-                    ls.AddRange(emulator.Current.Value);
+                    ls.Add(emulator.Current.Value);
                 }
             }
             return ls;
@@ -49,7 +52,7 @@ namespace HangFireStorageService.Servces
 
         public async Task AddOrUpdateAsync(HashDto dto)
         {
-            var hash_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, HashDto>>(Consts.HASH_DICT);
+            var hash_dict = await GetHashDtosDictAsync();
             using (var tx = this._stateManager.CreateTransaction())
             {
                 await hash_dict.SetAsync(tx, dto.Id, dto);
@@ -59,7 +62,7 @@ namespace HangFireStorageService.Servces
 
         public async Task<HashDto> GetHashDtoAsync(string key)
         {
-            var hash_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, HashDto>>(Consts.HASH_DICT);
+            var hash_dict = await GetHashDtosDictAsync();
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var emulator = (await hash_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
@@ -70,6 +73,12 @@ namespace HangFireStorageService.Servces
                 }
                 return null;
             }
+        }
+
+        private async Task<IReliableDictionary2<string, HashDto>> GetHashDtosDictAsync()
+        {
+            var hash_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, HashDto>>(string.Format(Consts.HASH_DICT, this._option.Prefix));
+            return hash_dict;
         }
     }
 }

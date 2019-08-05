@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HangFireStorageService.Servces
+namespace Hangfire.ServiceFabric.Servces
 {
     public interface IJobAppService : IService
     {

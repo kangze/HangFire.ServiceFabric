@@ -8,7 +8,6 @@ using Hangfire.ServiceFabric.Internal;
 using Hangfire.ServiceFabric.Servces;
 using Hangfire.Storage;
 using HangFireStorageService.Extensions;
-using HangFireStorageService.Servces;
 
 namespace HangFireStorageService.Internal
 {

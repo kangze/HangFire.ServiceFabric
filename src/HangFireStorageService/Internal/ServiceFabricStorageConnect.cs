@@ -12,7 +12,6 @@ using Hangfire.ServiceFabric.Internal;
 using Hangfire.ServiceFabric.Servces;
 using Hangfire.Storage;
 using HangFireStorageService.Dto;
-using HangFireStorageService.Servces;
 using Mcs.Common.BaseServices;
 
 namespace HangFireStorageService.Internal

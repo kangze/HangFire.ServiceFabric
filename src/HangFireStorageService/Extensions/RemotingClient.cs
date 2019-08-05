@@ -1,6 +1,5 @@
 ﻿using Hangfire.ServiceFabric.Internal;
 using Hangfire.ServiceFabric.Servces;
-using HangFireStorageService.Servces;
 using Microsoft.ServiceFabric.Services.Client;
 using Microsoft.ServiceFabric.Services.Remoting.Client;
 using Microsoft.ServiceFabric.Services.Remoting.V2.FabricTransport.Client;

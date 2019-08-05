@@ -12,7 +12,6 @@ using Hangfire.States;
 using Hangfire.Storage;
 using Hangfire.Storage.Monitoring;
 using HangFireStorageService.Dto;
-using HangFireStorageService.Servces;
 
 namespace HangFireStorageService.Internal
 {

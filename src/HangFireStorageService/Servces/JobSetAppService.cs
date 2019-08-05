@@ -5,23 +5,26 @@ using System.Text;
 using System.Threading.Tasks;
 using Hangfire.ServiceFabric.Dtos;
 using HangFireStorageService.Dto;
+using HangFireStorageService.Extensions;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Data.Collections;
 
-namespace HangFireStorageService.Servces
+namespace Hangfire.ServiceFabric.Servces
 {
     public class JobSetAppService : IJobSetAppService
     {
         private readonly IReliableStateManager _stateManager;
+        private readonly ServiceFabricOptions _option;
 
-        public JobSetAppService(IReliableStateManager stateManager)
+        public JobSetAppService(IReliableStateManager stateManager, ServiceFabricOptions option)
         {
             this._stateManager = stateManager;
+            this._option = option;
         }
 
         public async Task AddSetAsync(string key, string value, double score)
         {
-            var set_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, SetDto>>(Consts.SET_DICT);
+            var set_dict = await GetSetDtosDictAsync();
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var set_condition = await set_dict.TryGetValueAsync(tx, key);
@@ -47,7 +50,7 @@ namespace HangFireStorageService.Servces
 
         public async Task<List<SetDto>> GetSetsAsync()
         {
-            var set_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, SetDto>>(Consts.SET_DICT);
+            var set_dict = await GetSetDtosDictAsync();
             var ls = new List<SetDto>();
             using (var tx = this._stateManager.CreateTransaction())
             {
@@ -62,13 +65,19 @@ namespace HangFireStorageService.Servces
 
         public async Task RemoveAsync(string key, string value)
         {
-            var set_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, SetDto>>(Consts.SET_DICT);
+            var set_dict = await GetSetDtosDictAsync();
             var ls = new List<SetDto>();
             using (var tx = this._stateManager.CreateTransaction())
             {
                 await set_dict.TryRemoveAsync(tx, key);
                 await tx.CommitAsync();
             }
+        }
+
+        private async Task<IReliableDictionary2<string, SetDto>> GetSetDtosDictAsync()
+        {
+            var set_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, SetDto>>(string.Format(Consts.SET_DICT, this._option.Prefix));
+            return set_dict;
         }
     }
 }

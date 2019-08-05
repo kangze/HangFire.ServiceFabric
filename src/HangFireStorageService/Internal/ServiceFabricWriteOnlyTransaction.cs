@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 using Hangfire.Common;
 using Hangfire.ServiceFabric.Dtos;
 using Hangfire.ServiceFabric.Internal;
+using Hangfire.ServiceFabric.Servces;
 using Hangfire.States;
 using Hangfire.Storage;
 using HangFireStorageService.Dto;
-using HangFireStorageService.Servces;
 
 namespace HangFireStorageService.Internal
 {

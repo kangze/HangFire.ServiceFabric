@@ -5,18 +5,21 @@ using System.Text;
 using System.Threading.Tasks;
 using Hangfire.Storage.Monitoring;
 using HangFireStorageService.Dto;
+using HangFireStorageService.Extensions;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Data.Collections;
 
-namespace HangFireStorageService.Servces
+namespace Hangfire.ServiceFabric.Servces
 {
     public class ServerAppService : IServerAppService
     {
         private readonly IReliableStateManager _stateManager;
+        private readonly ServiceFabricOptions _option;
 
-        public ServerAppService(IReliableStateManager stateManager)
+        public ServerAppService(IReliableStateManager stateManager, ServiceFabricOptions option)
         {
             this._stateManager = stateManager;
+            this._option = option;
         }
 
         public async Task AddOrUpdateAsync(string serverId, string data, DateTime heartBeat)
@@ -26,7 +29,7 @@ namespace HangFireStorageService.Servces
             if (string.IsNullOrEmpty(data))
                 throw new ArgumentNullException(nameof(data));
 
-            var server_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, ServerDtos>>(Consts.SERVER_DICT);
+            var server_dict = await GetServerDtosDictAsync();
 
             using (var tx = this._stateManager.CreateTransaction())
             {
@@ -56,7 +59,7 @@ namespace HangFireStorageService.Servces
 
         public async Task<List<ServerDtos>> GetAllServerAsync()
         {
-            var server_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, ServerDtos>>(Consts.SERVER_DICT);
+            var server_dict = await GetServerDtosDictAsync();
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var ls = new List<ServerDtos>();
@@ -74,7 +77,7 @@ namespace HangFireStorageService.Servces
             if (string.IsNullOrEmpty(serverId))
                 throw new ArgumentNullException(nameof(serverId));
 
-            var server_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, ServerDtos>>(Consts.SERVER_DICT);
+            var server_dict = await GetServerDtosDictAsync();
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var server_condition = await server_dict.TryGetValueAsync(tx, serverId);
@@ -86,12 +89,18 @@ namespace HangFireStorageService.Servces
         {
             if (string.IsNullOrEmpty(serverId))
                 throw new ArgumentNullException(nameof(serverId));
-            var server_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, ServerDtos>>(Consts.SERVER_DICT);
+            var server_dict = await GetServerDtosDictAsync();
             using (var tx = this._stateManager.CreateTransaction())
             {
                 await server_dict.TryRemoveAsync(tx, serverId);
                 await tx.CommitAsync();
             }
+        }
+
+        private async Task<IReliableDictionary2<string, ServerDtos>> GetServerDtosDictAsync()
+        {
+            var server_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, ServerDtos>>(string.Format(Consts.SERVER_DICT, this._option.Prefix));
+            return server_dict;
         }
     }
 }
