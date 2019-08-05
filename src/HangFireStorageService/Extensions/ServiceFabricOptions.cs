@@ -6,13 +6,8 @@ using System.Threading.Tasks;
 
 namespace HangFireStorageService.Extensions
 {
-    public class ServiceFabricOptions
+    public class ServiceFabricOptions1
     {
-        /// <summary>
-        /// 服务名称的前缀
-        /// </summary>
-        public string Prefix { get; set; } = "Default";
-
         public string ApplicationUri { get; set; }
     }
 }

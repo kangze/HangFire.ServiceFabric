@@ -13,17 +13,15 @@ namespace Hangfire.ServiceFabric.Servces
     public class AggregatedCounterAppService : IAggregatedCounterAppService
     {
         private readonly IReliableStateManager _stateManager;
-        private readonly ServiceFabricOptions _option;
 
-        public AggregatedCounterAppService(IReliableStateManager stateManager, ServiceFabricOptions option)
+        public AggregatedCounterAppService(IReliableStateManager stateManager)
         {
             this._stateManager = stateManager;
-            this._option = option;
         }
 
         public async Task<List<AggregatedCounterDto>> GetAllCounterAsync()
         {
-            var aggregatedCounter_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, AggregatedCounterDto>>(string.Format(Consts.AGGREGATEDCOUNTER, this._option.Prefix));
+            var aggregatedCounter_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, AggregatedCounterDto>>(Consts.AGGREGATEDCOUNTER);
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var ls = new List<AggregatedCounterDto>();

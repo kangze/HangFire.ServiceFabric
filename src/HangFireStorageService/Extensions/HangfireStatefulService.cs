@@ -14,13 +14,9 @@ namespace Hangfire.ServiceFabric.Extensions
 {
     public class HangfireStatefulService : StatefulService
     {
-        private readonly ServiceFabricOptions _option;
-
-        public HangfireStatefulService(StatefulServiceContext context,
-            ServiceFabricOptions option)
+        public HangfireStatefulService(StatefulServiceContext context)
            : base(context)
         {
-            this._option = option;
         }
 
         /// <summary>
@@ -32,7 +28,7 @@ namespace Hangfire.ServiceFabric.Extensions
         /// <returns>A collection of listeners.</returns>
         protected override IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners()
         {
-            return ServiceFabricStorageExtensions.CreateServiceReplicaListeners(this.StateManager, this._option);
+            return ServiceFabricStorageExtensions.CreateServiceReplicaListeners(this.StateManager);
         }
 
 

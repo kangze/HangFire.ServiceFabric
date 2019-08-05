@@ -14,12 +14,10 @@ namespace Hangfire.ServiceFabric.Servces
     public class CounterAppService : ICounterAppService
     {
         private readonly IReliableStateManager _stateManager;
-        private readonly ServiceFabricOptions _option;
 
-        public CounterAppService(IReliableStateManager stateManager, ServiceFabricOptions option)
+        public CounterAppService(IReliableStateManager stateManager)
         {
             this._stateManager = stateManager;
-            this._option = option;
         }
 
         public async Task AddAsync(string key, TimeSpan? expireIn)
@@ -109,7 +107,7 @@ namespace Hangfire.ServiceFabric.Servces
 
         private async Task<IReliableDictionary2<string, CounterDto>> GetCounterDtosDictAsync()
         {
-            var counter_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, CounterDto>>(string.Format(Consts.COUNTER, this._option.Prefix));
+            var counter_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, CounterDto>>(Consts.COUNTER);
             return counter_dict;
         }
     }

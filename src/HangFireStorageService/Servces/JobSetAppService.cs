@@ -14,12 +14,10 @@ namespace Hangfire.ServiceFabric.Servces
     public class JobSetAppService : IJobSetAppService
     {
         private readonly IReliableStateManager _stateManager;
-        private readonly ServiceFabricOptions _option;
 
-        public JobSetAppService(IReliableStateManager stateManager, ServiceFabricOptions option)
+        public JobSetAppService(IReliableStateManager stateManager)
         {
             this._stateManager = stateManager;
-            this._option = option;
         }
 
         public async Task AddSetAsync(string key, string value, double score)
@@ -76,7 +74,7 @@ namespace Hangfire.ServiceFabric.Servces
 
         private async Task<IReliableDictionary2<string, SetDto>> GetSetDtosDictAsync()
         {
-            var set_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, SetDto>>(string.Format(Consts.SET_DICT, this._option.Prefix));
+            var set_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, SetDto>>(Consts.SET_DICT);
             return set_dict;
         }
     }

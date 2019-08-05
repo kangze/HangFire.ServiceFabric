@@ -13,12 +13,10 @@ namespace Hangfire.ServiceFabric.Servces
     public class HashAppService : IHashAppService
     {
         private readonly IReliableStateManager _stateManager;
-        private readonly ServiceFabricOptions _option;
 
-        public HashAppService(IReliableStateManager stateManager, ServiceFabricOptions option)
+        public HashAppService(IReliableStateManager stateManager)
         {
             this._stateManager = stateManager;
-            this._option = option;
         }
 
         public async Task RemoveAsync(string key)
@@ -77,7 +75,7 @@ namespace Hangfire.ServiceFabric.Servces
 
         private async Task<IReliableDictionary2<string, HashDto>> GetHashDtosDictAsync()
         {
-            var hash_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, HashDto>>(string.Format(Consts.HASH_DICT, this._option.Prefix));
+            var hash_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, HashDto>>(Consts.HASH_DICT);
             return hash_dict;
         }
     }

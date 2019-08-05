@@ -22,7 +22,7 @@ namespace HangFireStorageService.Internal
             this._services = servies;
         }
 
-        internal static ServiceFabricStorage Create(ServiceFabricOptions option)
+        internal static ServiceFabricStorage Create()
         {
             var services = RemotingClient.CreateServiceFabricStorageServices();
             return new ServiceFabricStorage(services);

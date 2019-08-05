@@ -14,12 +14,10 @@ namespace Hangfire.ServiceFabric.Servces
     public class ServerAppService : IServerAppService
     {
         private readonly IReliableStateManager _stateManager;
-        private readonly ServiceFabricOptions _option;
 
-        public ServerAppService(IReliableStateManager stateManager, ServiceFabricOptions option)
+        public ServerAppService(IReliableStateManager stateManager)
         {
             this._stateManager = stateManager;
-            this._option = option;
         }
 
         public async Task AddOrUpdateAsync(string serverId, string data, DateTime heartBeat)
@@ -99,7 +97,7 @@ namespace Hangfire.ServiceFabric.Servces
 
         private async Task<IReliableDictionary2<string, ServerDtos>> GetServerDtosDictAsync()
         {
-            var server_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, ServerDtos>>(string.Format(Consts.SERVER_DICT, this._option.Prefix));
+            var server_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, ServerDtos>>(Consts.SERVER_DICT);
             return server_dict;
         }
     }

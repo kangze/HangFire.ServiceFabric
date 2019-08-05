@@ -16,17 +16,15 @@ namespace Hangfire.ServiceFabric.Servces
     public class ResourceLockAppService : IResourceLockAppService
     {
         private readonly IReliableStateManager _stateManager;
-        private readonly ServiceFabricOptions _options;
 
-        public ResourceLockAppService(IReliableStateManager stateManager, ServiceFabricOptions options)
+        public ResourceLockAppService(IReliableStateManager stateManager)
         {
             this._stateManager = stateManager;
-            this._options = options;
         }
 
         public async Task<bool> LockAsync(string resource)
         {
-            var lock_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, int>>(string.Format(Consts.LOCK_DICT, this._options.Prefix));
+            var lock_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, int>>(Consts.LOCK_DICT);
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var lock_condition = await lock_dict.TryGetValueAsync(tx, resource);
@@ -45,7 +43,7 @@ namespace Hangfire.ServiceFabric.Servces
 
         public async Task<bool> ReleaseAsync(string resource)
         {
-            var lock_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, int>>(string.Format(Consts.LOCK_DICT, this._options.Prefix));
+            var lock_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, int>>(Consts.LOCK_DICT);
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var lock_condition = await lock_dict.TryGetValueAsync(tx, resource);

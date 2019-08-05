@@ -16,12 +16,10 @@ namespace Hangfire.ServiceFabric.Servces
     public class JobAppService : IJobAppService
     {
         private readonly IReliableStateManager _stateManager;
-        private readonly ServiceFabricOptions _option;
 
-        public JobAppService(IReliableStateManager stateManager, ServiceFabricOptions option)
+        public JobAppService(IReliableStateManager stateManager)
         {
             this._stateManager = stateManager;
-            this._option = option;
         }
 
 
@@ -31,7 +29,7 @@ namespace Hangfire.ServiceFabric.Servces
                 throw new ArgumentNullException(nameof(jobDto));
             if (jobDto.Id == default)
                 jobDto.Id = Guid.NewGuid().ToString("N");
-            var job_dict= await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobDto>>(string.Format(Consts.JOB_DICT, this._option.Prefix));
+            var job_dict= await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobDto>>(Consts.JOB_DICT);
             using (var tx = this._stateManager.CreateTransaction())
             {
                 await job_dict.SetAsync(tx, jobDto.Id, jobDto);
@@ -42,7 +40,7 @@ namespace Hangfire.ServiceFabric.Servces
 
         public async Task<JobDto> GetJobAsync(string JobId)
         {
-            var job_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobDto>>(string.Format(Consts.JOB_DICT, this._option.Prefix));
+            var job_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobDto>>(Consts.JOB_DICT);
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var job_condition = await job_dict.TryGetValueAsync(tx, JobId);
@@ -54,7 +52,7 @@ namespace Hangfire.ServiceFabric.Servces
 
         public async Task<List<JobDto>> GetJobsByStateNameAsync(string stateName)
         {
-            var job_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobDto>>(string.Format(Consts.JOB_DICT, this._option.Prefix));
+            var job_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobDto>>(Consts.JOB_DICT);
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var ls = new List<JobDto>();
@@ -71,7 +69,7 @@ namespace Hangfire.ServiceFabric.Servces
         public async Task<List<JobDto>> GetJobsByIdsAsync(string[] jobIds)
         {
             var result = new List<JobDto>();
-            var job_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobDto>>(string.Format(Consts.JOB_DICT, this._option.Prefix));
+            var job_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobDto>>(Consts.JOB_DICT);
             using (var tx = this._stateManager.CreateTransaction())
             {
                 foreach (var jobId in jobIds)
@@ -89,7 +87,7 @@ namespace Hangfire.ServiceFabric.Servces
 
         public async Task<List<JobDto>> GetJobsAsync()
         {
-            var job_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobDto>>(string.Format(Consts.JOB_DICT, this._option.Prefix));
+            var job_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobDto>>(Consts.JOB_DICT);
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var enumlator = (await job_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
