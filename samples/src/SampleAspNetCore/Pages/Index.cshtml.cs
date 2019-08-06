@@ -11,7 +11,7 @@ namespace SampleAspNetCore.Pages
     {
         public void OnGet()
         {
-
+            Hangfire.RecurringJob.AddOrUpdate(() => Console.Write("1"), Hangfire.Cron.MinuteInterval(1));
         }
     }
 }

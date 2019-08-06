@@ -46,6 +46,7 @@ namespace Hangfire.ServiceFabric.Servces
 
         }
 
+
         public async Task<List<SetDto>> GetSetsAsync()
         {
             var set_dict = await GetSetDtosDictAsync();

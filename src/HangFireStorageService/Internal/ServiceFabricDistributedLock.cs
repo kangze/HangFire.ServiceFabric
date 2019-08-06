@@ -1,6 +1,7 @@
 ﻿using Hangfire.ServiceFabric.Servces;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -12,35 +13,33 @@ namespace Hangfire.ServiceFabric.Internal
     {
         private readonly string _resource;
         private readonly Guid _lockId;
+        private readonly TimeSpan _timeout;
         private readonly IResourceLockAppService _resourceLockAppService;
 
         private readonly static Dictionary<string, HashSet<Guid>> _lockedResources = new Dictionary<string, HashSet<Guid>>();
 
-        public ServiceFabricDistributedLock(string resource, IResourceLockAppService resourceLockAppService)
+        public ServiceFabricDistributedLock(string resource, TimeSpan timeout, IResourceLockAppService resourceLockAppService)
         {
             _resource = resource;
             _lockId = Guid.NewGuid();
+            _timeout = timeout;
             _resourceLockAppService = resourceLockAppService;
         }
+        public static bool locked = false;
 
         public IDisposable AcquireLock()
         {
-            var lockId = Guid.NewGuid();
-
-            if (!_lockedResources.ContainsKey(_resource))
+            while (!locked)
             {
-
-                //SqlServerDistributedLock.Acquire(_dedicatedConnection, resource, timeout);
-                this._resourceLockAppService.LockAsync(this._resource).GetAwaiter().GetResult();
-                _lockedResources.Add(_resource, new HashSet<Guid>());
+                Thread.Sleep(100);
+                locked = true;
             }
-
-            _lockedResources[_resource].Add(lockId);
             return this;
         }
 
         public void Dispose()
         {
+            locked = false;
             if (_lockedResources.ContainsKey(_resource) &&
                 _lockedResources[_resource].Contains(_lockId) &&
                 _lockedResources[_resource].Remove(_lockId) &&
@@ -49,7 +48,8 @@ namespace Hangfire.ServiceFabric.Internal
                 )
             {
                 //TODO:ServiceFabric Reliease It
-
+                this._resourceLockAppService.ReleaseAsync(_resource).GetAwaiter().GetResult();
+                return;
             }
         }
     }

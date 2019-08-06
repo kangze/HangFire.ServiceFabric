@@ -41,7 +41,7 @@ namespace HangFireStorageService.Internal
 
         public override IDisposable AcquireDistributedLock(string resource, TimeSpan timeout)
         {
-            var distributedLock = new ServiceFabricDistributedLock(resource, this._services.ResourceLockAppService);
+            var distributedLock = new ServiceFabricDistributedLock(resource, timeout, this._services.ResourceLockAppService);
             return distributedLock.AcquireLock();
         }
 
@@ -199,7 +199,8 @@ namespace HangFireStorageService.Internal
         public override Dictionary<string, string> GetAllEntriesFromHash(string key)
         {
             var hash = this._services.HashAppService.GetHashDtoAsync(key).GetAwaiter().GetResult();
-            return hash.Fields;
+
+            return hash == null ? new Dictionary<string, string>() : hash.Fields;
         }
 
         public override long GetCounter(string key)
@@ -242,39 +243,92 @@ namespace HangFireStorageService.Internal
             return list.Select(u => u.Value).ToList();
         }
 
-        public override List<string> GetFirstByLowestScoreFromSet(string key, double fromScore, double toScore, int count)
-        {
-            return new List<string>();
-        }
-
         public override TimeSpan GetHashTtl([NotNull] string key)
         {
-            return TimeSpan.FromSeconds(1);
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+            var hashes = this._services.HashAppService.GetAllHashAsync().GetAwaiter().GetResult();
+            var result = hashes.Where(u => u.Key == key)
+                .OrderBy(u => u.ExpireAt)
+                .Select(u => u.ExpireAt)
+                .FirstOrDefault();
+
+            return result.HasValue ? result.Value - DateTime.UtcNow : TimeSpan.FromSeconds(-1);
         }
 
         public override long GetListCount([NotNull] string key)
         {
-            return 0;
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+            var list = this._services.ListAppService.GetListDtoAsync(key).GetAwaiter().GetResult();
+            return list.Count;
         }
 
         public override List<string> GetRangeFromSet([NotNull] string key, int startingFrom, int endingAt)
         {
-            return base.GetRangeFromSet(key, startingFrom, endingAt);
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+            var setDtos = this._services.JobSetAppService.GetSetsAsync().GetAwaiter().GetResult();
+            var setValues = setDtos.Where(u => u.Key.Contains(key))
+                .OrderBy(u => u.Id)
+                .Skip(startingFrom)
+                .Take(endingAt - startingFrom + 1)
+                .Select(u => u.Value)
+                .ToList();
+            return setValues;
         }
 
         public override TimeSpan GetListTtl([NotNull] string key)
         {
-            return base.GetListTtl(key);
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            var list = this._services.ListAppService.GetListDtoAsync(key).GetAwaiter().GetResult();
+            var expireAt = list.OrderBy(u => u.ExpireAt).Select(u => u.ExpireAt).FirstOrDefault();
+
+            return expireAt.HasValue ? expireAt.Value - DateTime.UtcNow : TimeSpan.FromSeconds(-1);
         }
 
         public override TimeSpan GetSetTtl([NotNull] string key)
         {
-            return base.GetSetTtl(key);
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+            var setDtos = this._services.JobSetAppService.GetSetsAsync().GetAwaiter().GetResult();
+            var expireAts = setDtos
+                .Where(u => u.Key.Contains(key) && u.ExpireAt != null)
+                .Select(u => u.ExpireAt)
+                .ToList();
+            return expireAts.Any() ? expireAts.Min() - DateTime.UtcNow : TimeSpan.FromSeconds(-1);
+
         }
 
         public override string GetValueFromHash([NotNull] string key, [NotNull] string name)
         {
-            return base.GetValueFromHash(key, name);
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            var hashDto = this._services.HashAppService.GetHashDtoAsync(key).GetAwaiter().GetResult();
+            if (hashDto != null && hashDto.Fields.ContainsKey(name))
+                return hashDto.Fields[name];
+            return null;
+
         }
     }
 }

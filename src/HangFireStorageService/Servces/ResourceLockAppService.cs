@@ -30,7 +30,7 @@ namespace Hangfire.ServiceFabric.Servces
                 var lock_condition = await lock_dict.TryGetValueAsync(tx, resource);
                 if (lock_condition.HasValue)
                 {
-                    await lock_dict.SetAsync(tx, resource, lock_condition.Value + 1);
+                    return false;
                 }
                 else
                 {

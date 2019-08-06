@@ -19,6 +19,7 @@ namespace HangFireStorageService.Extensions
         public static IGlobalConfiguration<ServiceFabricStorage> UseServiceFabric(
             [NotNull] this IGlobalConfiguration configuration)
         {
+            RemotingClient.ApplicationUri = "fabric:/HangfireServiceFabricSfApp/HangfireStorage";
             var storage = ServiceFabricStorage.Create();
             return configuration.UseStorage(storage);
         }

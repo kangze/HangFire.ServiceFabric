@@ -238,12 +238,12 @@ namespace HangFireStorageService.Internal
                 var hashDto = hashAppService.GetHashDtoAsync(key).GetAwaiter().GetResult();
                 var dto = new HashDto()
                 {
-                    Id = hashDto == null ? null : hashDto.Id,
+                    Id = hashDto == null ? Guid.NewGuid().ToString("N") : hashDto.Id,
                     Key = key,
                     Fields = keyValuePairs.ToDictionary(u => u.Key, u => u.Value),
                     ExpireAt = null,
                 };
-                hashAppService.AddOrUpdateAsync(hashDto).GetAwaiter().GetResult();
+                hashAppService.AddOrUpdateAsync(dto).GetAwaiter().GetResult();
             });
         }
 

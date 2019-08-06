@@ -15,8 +15,6 @@ namespace Hangfire.ServiceFabric.Servces
 
         Task<JobQueueDto> GetQueueAsync(string id);
 
-        Task DeleteQueueJobAsync(string queue, string jobId);
-
         Task DeleteQueueJobAsync(string id);
 
         Task UpdateQueueAsync(JobQueueDto dto);
