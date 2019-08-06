@@ -11,7 +11,11 @@ Project("{A07B5EB6-E848-4116-A8D0-A826331D98C6}") = "HangfireServiceFabricSfApp"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HangfireStorage", "samples\src\HangfireStorage\HangfireStorage.csproj", "{1A5E29EC-31CE-4593-8177-C3D74BE51F2B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleAspNetCore", "samples\src\SampleAspNetCore\SampleAspNetCore.csproj", "{7CB240D8-C765-4723-BC81-0F137C114FD2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleAspNetCore", "samples\src\SampleAspNetCore\SampleAspNetCore.csproj", "{7CB240D8-C765-4723-BC81-0F137C114FD2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hangfire.Core", "..\..\..\Users\kangze\Downloads\Hangfire-1.7.2\Hangfire-1.7.2\src\Hangfire.Core\Hangfire.Core.csproj", "{72F409AE-DA19-43E4-8861-495012F4BEB5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hangfire.AspNetCore", "..\..\..\Users\kangze\Downloads\Hangfire-1.7.2\Hangfire-1.7.2\src\Hangfire.AspNetCore\Hangfire.AspNetCore.csproj", "{492E4362-4FFC-405E-91EE-FC30A6E9DB84}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -53,6 +57,22 @@ Global
 		{7CB240D8-C765-4723-BC81-0F137C114FD2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7CB240D8-C765-4723-BC81-0F137C114FD2}.Release|x64.ActiveCfg = Release|Any CPU
 		{7CB240D8-C765-4723-BC81-0F137C114FD2}.Release|x64.Build.0 = Release|Any CPU
+		{72F409AE-DA19-43E4-8861-495012F4BEB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72F409AE-DA19-43E4-8861-495012F4BEB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72F409AE-DA19-43E4-8861-495012F4BEB5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{72F409AE-DA19-43E4-8861-495012F4BEB5}.Debug|x64.Build.0 = Debug|Any CPU
+		{72F409AE-DA19-43E4-8861-495012F4BEB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72F409AE-DA19-43E4-8861-495012F4BEB5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72F409AE-DA19-43E4-8861-495012F4BEB5}.Release|x64.ActiveCfg = Release|Any CPU
+		{72F409AE-DA19-43E4-8861-495012F4BEB5}.Release|x64.Build.0 = Release|Any CPU
+		{492E4362-4FFC-405E-91EE-FC30A6E9DB84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{492E4362-4FFC-405E-91EE-FC30A6E9DB84}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{492E4362-4FFC-405E-91EE-FC30A6E9DB84}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{492E4362-4FFC-405E-91EE-FC30A6E9DB84}.Debug|x64.Build.0 = Debug|Any CPU
+		{492E4362-4FFC-405E-91EE-FC30A6E9DB84}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{492E4362-4FFC-405E-91EE-FC30A6E9DB84}.Release|Any CPU.Build.0 = Release|Any CPU
+		{492E4362-4FFC-405E-91EE-FC30A6E9DB84}.Release|x64.ActiveCfg = Release|Any CPU
+		{492E4362-4FFC-405E-91EE-FC30A6E9DB84}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

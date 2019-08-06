@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
@@ -7,13 +7,13 @@
 
 
   <ItemGroup>
-    <PackageReference Include="Hangfire" Version="1.7.2" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
   </ItemGroup>
 
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\..\Users\kangze\Downloads\Hangfire-1.7.2\Hangfire-1.7.2\src\Hangfire.AspNetCore\Hangfire.AspNetCore.csproj" />
     <ProjectReference Include="..\..\..\src\HangFireStorageService\Hangfire.ServiceFabric.csproj" />
   </ItemGroup>
 

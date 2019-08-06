@@ -236,12 +236,17 @@ namespace HangFireStorageService.Internal
             this._hashActions.Add((hashAppService) =>
             {
                 var hashDto = hashAppService.GetHashDtoAsync(key).GetAwaiter().GetResult();
+                var fields = hashDto == null ? new Dictionary<string, string>() : hashDto.Fields;
+                foreach (var kv in keyValuePairs)
+                {
+                    fields.TryAdd(kv.Key, kv.Value);
+                }
                 var dto = new HashDto()
                 {
                     Id = hashDto == null ? Guid.NewGuid().ToString("N") : hashDto.Id,
                     Key = key,
-                    Fields = keyValuePairs.ToDictionary(u => u.Key, u => u.Value),
                     ExpireAt = null,
+                    Fields = fields
                 };
                 hashAppService.AddOrUpdateAsync(dto).GetAwaiter().GetResult();
             });

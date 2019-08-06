@@ -190,7 +190,7 @@ namespace HangFireStorageService.Internal
                 {
                     Job = job,
                     InSucceededState = SucceededState.StateName.Equals(jobDto.StateName, StringComparison.OrdinalIgnoreCase),
-                    Result = stateData["Result"],
+                    Result = stateData.ContainsKey("Result") ? stateData["Result"] : null,
                     TotalDuration = stateData.ContainsKey("PerformanceDuration") && stateData.ContainsKey("Latency")
                         ? (long?)long.Parse(stateData["PerformanceDuration"]) + (long?)long.Parse(stateData["Latency"])
                         : null,
@@ -207,7 +207,7 @@ namespace HangFireStorageService.Internal
                 {
                     Job = job,
                     InFailedState = FailedState.StateName.Equals(jobDto.StateName, StringComparison.OrdinalIgnoreCase),
-                    //Reason = jobDto.StateReason, //缺失这个属性,TODO后续补上
+                    Reason = jobDto.StateReason,
                     ExceptionDetails = stateData["ExceptionDetails"],
                     ExceptionMessage = stateData["ExceptionMessage"],
                     ExceptionType = stateData["ExceptionType"],
@@ -468,7 +468,7 @@ namespace HangFireStorageService.Internal
 
             foreach (var job in jobs)
             {
-                var stateData = job.StateData;
+                var stateData = SerializationHelper.Deserialize<Dictionary<string, string>>(Newtonsoft.Json.JsonConvert.SerializeObject(job.StateData));
                 var dto = selector(job, DeserializeJob(job.InvocationData, job.Arguments), stateData);
                 result.Add(new KeyValuePair<string, TDto>(job.Id, dto));
             }

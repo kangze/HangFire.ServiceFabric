@@ -179,12 +179,17 @@ namespace HangFireStorageService.Internal
 
         public override string GetFirstByLowestScoreFromSet(string key, double fromScore, double toScore)
         {
+            return GetFirstByLowestScoreFromSet(key, fromScore, toScore, 1).FirstOrDefault();
+        }
+
+        public override List<string> GetFirstByLowestScoreFromSet(string key, double fromScore, double toScore, int count)
+        {
             if (key == null) throw new ArgumentNullException(nameof(key));
             if (toScore < fromScore) throw new ArgumentException("The `toScore` value must be higher or equal to the `fromScore` value.", nameof(toScore));
 
             var all_sets = this._services.JobSetAppService.GetSetsAsync().GetAwaiter().GetResult();
-            var firtst_set = all_sets.Where(u => u.Score >= fromScore && u.Score <= toScore).OrderBy(u => u.Score).FirstOrDefault();
-            return firtst_set == null ? "" : firtst_set.Value;
+            var sets = all_sets.Where(u => u.Score >= fromScore && u.Score <= toScore).OrderBy(u => u.Score).Take(count);
+            return sets.Select(u => u.Value).ToList();
         }
 
         public override void SetRangeInHash(string key, IEnumerable<KeyValuePair<string, string>> keyValuePairs)
@@ -217,12 +222,31 @@ namespace HangFireStorageService.Internal
 
         public override long GetSetCount([NotNull] string key)
         {
-            return 0;
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            var sets = this._services.JobSetAppService.GetSetsAsync().GetAwaiter().GetResult();
+            var count = sets.Where(u => u.Key.Contains(key)).Count();
+            return count;
         }
 
         public override List<string> GetRangeFromList([NotNull] string key, int startingFrom, int endingAt)
         {
-            return new List<string>();
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            var listDtos = this._services.ListAppService.GetListDtoAsync(key).GetAwaiter().GetResult();
+            var listValues = listDtos.Where(u => u.Item.Contains(key))
+                .OrderBy(u => u.Id)
+                .Skip(startingFrom)
+                .Take(endingAt - startingFrom + 1)
+                .Select(u => u.Value)
+                .ToList();
+            return listValues;
         }
 
         public override long GetHashCount([NotNull] string key)

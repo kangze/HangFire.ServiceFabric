@@ -11,16 +11,16 @@ namespace Hangfire.ServiceFabric.Dtos
     [DataContract]
     public class StateDto
     {
-
+        [DataMember]
         public string Name { get; set; }
 
-
+        [DataMember]
         public string Reason { get; set; }
 
-
+        [DataMember]
         public DateTime CreatedAt { get; set; }
 
-
+        [DataMember]
         public Dictionary<string, string> Data { get; set; }
     }
 }

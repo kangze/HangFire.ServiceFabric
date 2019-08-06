@@ -7,12 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Hangfire.Core" Version="1.7.2" />
     <PackageReference Include="Mcs.Common.BaseServices" Version="1.0.10" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
     <PackageReference Include="Microsoft.ServiceFabric.Services" Version="3.3.654" />
     <PackageReference Include="Microsoft.ServiceFabric.Services.Remoting" Version="3.3.654" />
     <PackageReference Include="ServiceFabric.Contrib.Common" Version="1.0.27" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\Users\kangze\Downloads\Hangfire-1.7.2\Hangfire-1.7.2\src\Hangfire.Core\Hangfire.Core.csproj" />
   </ItemGroup>
 
 </Project>
