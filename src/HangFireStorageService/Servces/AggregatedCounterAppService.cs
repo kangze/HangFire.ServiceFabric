@@ -21,6 +21,7 @@ namespace Hangfire.ServiceFabric.Servces
 
         public async Task<List<AggregatedCounterDto>> GetAllCounterAsync()
         {
+            
             var aggregatedCounter_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<long, AggregatedCounterDto>>(Consts.AGGREGATEDCOUNTER);
             using (var tx = this._stateManager.CreateTransaction())
             {

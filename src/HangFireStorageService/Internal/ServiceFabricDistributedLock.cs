@@ -17,54 +17,35 @@ namespace Hangfire.ServiceFabric.Internal
         private static readonly ThreadLocal<Dictionary<string, int>> AcquiredLocks
                  = new ThreadLocal<Dictionary<string, int>>(() => new Dictionary<string, int>());
 
+        public static List<string> LockString = new List<string>();
+
         private bool _completed;
-        private readonly object _lockObject = new object();
+        private static readonly object _lockObject = new object();
 
         public ServiceFabricDistributedLock(string resource, TimeSpan timeout, IResourceLockAppService resourceLockAppService)
         {
-            if (string.IsNullOrEmpty(resource))
-                throw new ArgumentException(nameof(resource));
-            _resource = resource;
-            _resourceLockAppService = resourceLockAppService;
-
-            if (!AcquiredLocks.Value.ContainsKey(_resource) || AcquiredLocks.Value[_resource] == 0)
-            {
-
-                AcquireLock(timeout);
-                AcquiredLocks.Value[_resource] = 1;
-            }
-            else
-            {
-                AcquiredLocks.Value[_resource]++;
-            }
+            this._resource = resource;
+            AcquireLock();
         }
 
-        public IDisposable AcquireLock(TimeSpan timeout)
+        public IDisposable AcquireLock()
         {
-            var now = DateTime.UtcNow;
-            var lockTimeoutTime = now.Add(timeout);
-            var isLockAcquired = false;
-            while (!isLockAcquired && lockTimeoutTime >= now)
+            lock (_lockObject)
             {
-                //success gain a lock
-                if (!this._resourceLockAppService.LockAsync(this._resource).GetAwaiter().GetResult())
+                while (LockString.Contains(this._resource))
                 {
-                    isLockAcquired = true;
-                    continue;
+                    Thread.Sleep(1000);
                 }
+                LockString.Add(this._resource);
+                return this;
+            }
 
-                //wait for mutex if can not gain a lock
-                SemaphoreSlim.Wait();
-            }
-            if (!isLockAcquired)
-            {
-                throw new Exception($"{_resource} - Can not Gain Lock,Because of Timeout !");
-            }
-            return this;
         }
 
         public void Dispose()
         {
+            LockString.Remove(_resource);
+            return;
             if (_completed)
                 return;
             _completed = true;

@@ -28,8 +28,9 @@ namespace HangFireStorageService.Internal
         /// <param name="id">Identifier</param>
         /// <param name="jobId">Job ID</param>
         /// <param name="queue">Queue name</param>
-        public ServiceFabricFetchedJob(string Id, string jobId, string queue, IJobQueueAppService jobQueueAppService)
+        public ServiceFabricFetchedJob(string id, string jobId, string queue, IJobQueueAppService jobQueueAppService)
         {
+            Id = id;
             JobId = jobId.ToString();
             Queue = queue ?? throw new ArgumentNullException(nameof(queue));
             this._jobQueueAppService = jobQueueAppService;

@@ -37,7 +37,7 @@ namespace Hangfire.ServiceFabric.Servces
 
         public async Task DecrementAsync(string key, long amount, TimeSpan? expireIn)
         {
-            var counter_dict =  await GetCounterDtosDictAsync();
+            var counter_dict = await GetCounterDtosDictAsync();
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var enumlater = (await counter_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
@@ -100,9 +100,20 @@ namespace Hangfire.ServiceFabric.Servces
             }
         }
 
-        public Task<CounterDto> GetCounterAsync(string key)
+        public async Task<CounterDto> GetCounterAsync(string key)
         {
-            throw new NotImplementedException();
+            var counter_dict = await GetCounterDtosDictAsync();
+            using (var tx = this._stateManager.CreateTransaction())
+            {
+                var ls = new List<CounterDto>();
+                var enumlater = (await counter_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+                while (await enumlater.MoveNextAsync(default))
+                {
+                    if (enumlater.Current.Value.Key == key)
+                        return enumlater.Current.Value;
+                }
+                return null;
+            }
         }
 
         private async Task<IReliableDictionary2<string, CounterDto>> GetCounterDtosDictAsync()
