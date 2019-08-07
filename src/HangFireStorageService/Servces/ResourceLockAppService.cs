@@ -24,18 +24,14 @@ namespace Hangfire.ServiceFabric.Servces
 
         public async Task<bool> LockAsync(string resource)
         {
-            var lock_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, int>>(Consts.LOCK_DICT);
             using (var tx = this._stateManager.CreateTransaction())
             {
+                var lock_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, int>>(tx, Consts.LOCK_DICT);
                 var lock_condition = await lock_dict.TryGetValueAsync(tx, resource);
                 if (lock_condition.HasValue)
-                {
                     return false;
-                }
-                else
-                {
-                    await lock_dict.SetAsync(tx, resource, 1);
-                }
+
+                await lock_dict.SetAsync(tx, resource, 0);
                 await tx.CommitAsync();
                 return true;
             }
@@ -43,25 +39,15 @@ namespace Hangfire.ServiceFabric.Servces
 
         public async Task<bool> ReleaseAsync(string resource)
         {
-            var lock_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, int>>(Consts.LOCK_DICT);
             using (var tx = this._stateManager.CreateTransaction())
             {
+                var lock_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, int>>(Consts.LOCK_DICT);
                 var lock_condition = await lock_dict.TryGetValueAsync(tx, resource);
-                var result = false;
                 if (!lock_condition.HasValue)
-                    result = true;
-                else if (lock_condition.Value == 1)
-                {
-                    await lock_dict.TryRemoveAsync(tx, resource);
-                    result = true;
-                }
-                else if (lock_condition.Value > 1)
-                {
-                    await lock_dict.SetAsync(tx, resource, lock_condition.Value - 1);
-                    result = false;
-                }
+                    return true;
+                await lock_dict.TryRemoveAsync(tx, resource);
                 await tx.CommitAsync();
-                return result;
+                return true;
             }
         }
     }

@@ -42,7 +42,7 @@ namespace HangFireStorageService.Internal
         public override IDisposable AcquireDistributedLock(string resource, TimeSpan timeout)
         {
             var distributedLock = new ServiceFabricDistributedLock(resource, timeout, this._services.ResourceLockAppService);
-            return distributedLock.AcquireLock();
+            return distributedLock;
         }
 
         public override string CreateExpiredJob(Job job, IDictionary<string, string> parameters, DateTime createdAt, TimeSpan expireIn)
