@@ -15,13 +15,14 @@ namespace Hangfire.ServiceFabric.Internal
         private readonly TimeSpan _timeout;
         private readonly IResourceLockAppService _resourceLockAppService;
         private readonly Dictionary<string, HashSet<Guid>> LockedResources = new Dictionary<string, HashSet<Guid>>();
-        private bool _completed;
         private Guid LockId { get; set; }
 
 
         public ServiceFabricDistributedLock(string resource, TimeSpan timeout, IResourceLockAppService resourceLockAppService)
         {
             this._resource = resource;
+            this._timeout = timeout;
+            this._resourceLockAppService = resourceLockAppService;
             AcquireLock();
         }
 

@@ -12,7 +12,17 @@ namespace SampleAspNetCore.Pages
     {
         public void OnGet()
         {
-            RecurringJob.AddOrUpdate(() => Console.WriteLine("Transparent!"), Cron.Daily);
+            //基于队列的任务处理
+            var jobId = BackgroundJob.Enqueue(() => Console.WriteLine("Fire-and-forget!"));
+
+            ////延迟任务执行
+            //var jobId2 = BackgroundJob.Schedule(() => System.Diagnostics.Debug.WriteLine("Delayed!"), TimeSpan.FromMinutes(2));
+
+            ////定时任务执行
+            //RecurringJob.AddOrUpdate(() => System.Diagnostics.Debug.WriteLine("Recurring!"), Cron.Minutely);
+
+            ////延续性任务执行,延续job1
+            //BackgroundJob.ContinueJobWith(jobId, () => System.Diagnostics.Debug.WriteLine("Continuation!"));
         }
     }
 }
