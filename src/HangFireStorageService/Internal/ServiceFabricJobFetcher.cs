@@ -1,5 +1,6 @@
 ﻿using Hangfire.ServiceFabric.Servces;
 using Hangfire.Storage;
+using HangFireStorageService.Dto;
 using HangFireStorageService.Internal;
 using System;
 using System.Collections.Generic;
@@ -14,13 +15,13 @@ namespace Hangfire.ServiceFabric.Internal
     {
 
         private readonly IJobQueueAppService _jobQueueAppService;
-
         private readonly DateTime _invisibilityTimeout;
+        public static readonly AutoResetEvent NewItemInQueueEvent = new AutoResetEvent(false);
 
 
         public ServiceFabricJobFetcher(IJobQueueAppService jobQueueAppService)
         {
-            this._invisibilityTimeout = DateTime.UtcNow.AddSeconds(13);
+            this._invisibilityTimeout = DateTime.UtcNow.AddMinutes(30);
             this._jobQueueAppService = jobQueueAppService;
         }
 
@@ -45,13 +46,6 @@ namespace Hangfire.ServiceFabric.Internal
                 fetchedJob = TryAllQueues(queues, cancellationToken);
 
                 if (fetchedJob != null) return fetchedJob;
-
-
-                //if (_semaphore.WaitAny(queues, cancellationToken, _storageOptions.QueuePollInterval, out var queue))
-                //{
-
-                //}
-                //TODO:
                 fetchedJob = TryGetEnqueuedJob("", cancellationToken);
             }
 
@@ -67,28 +61,31 @@ namespace Hangfire.ServiceFabric.Internal
                 {
                     continue;
                 }
-                // make sure to try to decrement semaphore if we succeed in getting a job from the queue
-                //_semaphore.WaitNonBlock(queue);
                 return fetchedJob;
             }
-
             return null;
         }
 
         private ServiceFabricFetchedJob TryGetEnqueuedJob(string queue, CancellationToken cancellationToken)
         {
-            var jobs = this._jobQueueAppService.GetQueuesAsync(queue).GetAwaiter().GetResult();
-            var fetchedJob = (from job in jobs
+            JobQueueDto fetchedJob = null;
+            do
+            {
+                var jobs = this._jobQueueAppService.GetQueuesAsync(queue).GetAwaiter().GetResult();
+                fetchedJob = (from job in jobs
                               where job.FetchedAt == null || job.FetchedAt.Value <= _invisibilityTimeout
                               select job).FirstOrDefault();
-            if (fetchedJob == null)
-            {
-                return null;
-            }
-            fetchedJob.FetchedAt = DateTime.Now;
-            this._jobQueueAppService.UpdateQueueAsync(fetchedJob);
+                if (fetchedJob == null)
+                {
+                    WaitHandle.WaitAny(new WaitHandle[] { cancellationToken.WaitHandle, NewItemInQueueEvent }, 2000);
+                    continue;
+                }
+                fetchedJob.FetchedAt = DateTime.Now;
+                this._jobQueueAppService.UpdateQueueAsync(fetchedJob);
+                break;
+            } while (true);
 
-            return new ServiceFabricFetchedJob(fetchedJob.Id, fetchedJob.JobId,queue, _jobQueueAppService);
+            return new ServiceFabricFetchedJob(fetchedJob.Id, fetchedJob.JobId, queue, _jobQueueAppService);
         }
     }
 }

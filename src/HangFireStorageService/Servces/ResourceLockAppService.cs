@@ -28,12 +28,18 @@ namespace Hangfire.ServiceFabric.Servces
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var lock_condition = await lock_dict.TryGetValueAsync(tx, resource);
-                if (lock_condition.HasValue)
+                if (lock_condition.HasValue) return false;
+                try
+                {
+                    await lock_dict.SetAsync(tx, resource, 0);
+                    await tx.CommitAsync();
+                    return true;
+                }
+                catch (Exception)
+                {
                     return false;
+                }
 
-                await lock_dict.SetAsync(tx, resource, 0);
-                await tx.CommitAsync();
-                return true;
             }
         }
 

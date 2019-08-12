@@ -12,15 +12,12 @@ namespace Hangfire.ServiceFabric.Internal
     public class ServiceFabricDistributedLock : IDisposable
     {
         private readonly string _resource;
+        private readonly TimeSpan _timeout;
         private readonly IResourceLockAppService _resourceLockAppService;
-        private static readonly SemaphoreSlim SemaphoreSlim = new SemaphoreSlim(1);
-        private static readonly ThreadLocal<Dictionary<string, int>> AcquiredLocks
-                 = new ThreadLocal<Dictionary<string, int>>(() => new Dictionary<string, int>());
-
-        public static List<string> LockString = new List<string>();
-
+        private readonly Dictionary<string, HashSet<Guid>> LockedResources = new Dictionary<string, HashSet<Guid>>();
         private bool _completed;
-        private static readonly object _lockObject = new object();
+        private Guid LockId { get; set; }
+
 
         public ServiceFabricDistributedLock(string resource, TimeSpan timeout, IResourceLockAppService resourceLockAppService)
         {
@@ -30,40 +27,45 @@ namespace Hangfire.ServiceFabric.Internal
 
         public IDisposable AcquireLock()
         {
-            lock (_lockObject)
+            //开始获取锁
+            var lockId = Guid.NewGuid();
+            if (!LockedResources.ContainsKey(_resource))
             {
-                while (LockString.Contains(this._resource))
+                try
                 {
-                    Thread.Sleep(1000);
+                    var started = Stopwatch.StartNew();
+                    do
+                    {
+                        var b = _resourceLockAppService.LockAsync(_resource).GetAwaiter().GetResult();
+                        if (b) return this;
+                        Thread.Sleep(350);
+                    }
+                    while (started.Elapsed < _timeout);
                 }
-                LockString.Add(this._resource);
-                return this;
+                catch (Exception)
+                {
+                    throw;
+                }
+
+                LockedResources.Add(_resource, new HashSet<Guid>());
             }
 
+            LockedResources[_resource].Add(lockId);
+            this.LockId = lockId;
+            return this;
         }
 
         public void Dispose()
         {
-            LockString.Remove(_resource);
-            return;
-            if (_completed)
-                return;
-            _completed = true;
-            if (!AcquiredLocks.Value.ContainsKey(_resource))
-                return;
-
-
-            AcquiredLocks.Value[_resource]--;
-            if (AcquiredLocks.Value[_resource] > 0)
-                return;
-
-
-            // Timer callback may be invoked after the Dispose method call,
-            // so we are using lock to avoid un synchronized calls.
-            lock (_lockObject)
+            if (LockedResources.ContainsKey(_resource))
             {
-                AcquiredLocks.Value.Remove(_resource);
-                this._resourceLockAppService.ReleaseAsync(this._resource).GetAwaiter().GetResult();
+                if (LockedResources[_resource].Contains(LockId))
+                {
+                    if (LockedResources[_resource].Remove(LockId) && LockedResources[_resource].Count == 0 && LockedResources.Remove(_resource))
+                    {
+                        this._resourceLockAppService.ReleaseAsync(_resource).GetAwaiter().GetResult();
+                    }
+                }
             }
         }
     }
