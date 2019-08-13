@@ -144,7 +144,7 @@ namespace HangFireStorageService.Internal
             this._jobQueueActions.Add((jobQueueAppService) =>
             {
                 jobQueueAppService.AddToQueueJObAsync(queue, jobId).GetAwaiter().GetResult();
-                ServiceFabricJobFetcher.NewItemInQueueEvent.Set();
+                //ServiceFabricJobFetcher.NewItemInQueueEvent.Set();
             });
         }
 

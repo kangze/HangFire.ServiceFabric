@@ -1,4 +1,5 @@
-﻿using Hangfire.ServiceFabric.Entities;
+﻿using Hangfire.ServiceFabric.Dtos;
+using Hangfire.ServiceFabric.Entities;
 using HangFireStorageService.Dto;
 using HangFireStorageService.Extensions;
 using Microsoft.ServiceFabric.Data;
@@ -45,7 +46,7 @@ namespace Hangfire.ServiceFabric.Servces
                 var ls = new List<JobQueueDto>();
                 while (await enumerator.MoveNextAsync(default))
                 {
-                    if (enumerator.Current.Value.Queue == queue)
+                    if (string.IsNullOrEmpty(queue) || enumerator.Current.Value.Queue == queue)
                         ls.Add(enumerator.Current.Value);
                 }
                 return ls;

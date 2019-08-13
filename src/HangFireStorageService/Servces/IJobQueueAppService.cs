@@ -1,4 +1,5 @@
-﻿using Hangfire.ServiceFabric.Entities;
+﻿using Hangfire.ServiceFabric.Dtos;
+using Hangfire.ServiceFabric.Entities;
 using HangFireStorageService.Dto;
 using Microsoft.ServiceFabric.Services.Remoting;
 using System;

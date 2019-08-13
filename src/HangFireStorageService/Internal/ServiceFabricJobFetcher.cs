@@ -1,4 +1,5 @@
-﻿using Hangfire.ServiceFabric.Servces;
+﻿using Hangfire.ServiceFabric.Dtos;
+using Hangfire.ServiceFabric.Servces;
 using Hangfire.Storage;
 using HangFireStorageService.Dto;
 using HangFireStorageService.Internal;
@@ -16,7 +17,8 @@ namespace Hangfire.ServiceFabric.Internal
 
         private readonly IJobQueueAppService _jobQueueAppService;
         private readonly DateTime _invisibilityTimeout;
-        public static readonly AutoResetEvent NewItemInQueueEvent = new AutoResetEvent(false);
+        private readonly object lock_obj = new object();
+
 
 
         public ServiceFabricJobFetcher(IJobQueueAppService jobQueueAppService)
@@ -77,11 +79,15 @@ namespace Hangfire.ServiceFabric.Internal
                               select job).FirstOrDefault();
                 if (fetchedJob == null)
                 {
-                    WaitHandle.WaitAny(new WaitHandle[] { cancellationToken.WaitHandle, NewItemInQueueEvent }, 2000);
+                    //WaitHandle.WaitAny(new WaitHandle[] { cancellationToken.WaitHandle, NewItemInQueueEvent }, 2000);
+                    Thread.Sleep(200);
                     continue;
                 }
                 fetchedJob.FetchedAt = DateTime.Now;
-                this._jobQueueAppService.UpdateQueueAsync(fetchedJob);
+                lock (lock_obj)
+                {
+                    this._jobQueueAppService.UpdateQueueAsync(fetchedJob);
+                }
                 break;
             } while (true);
 
