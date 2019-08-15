@@ -30,28 +30,24 @@ namespace Hangfire.ServiceFabric.Internal
 
         public IFetchedJob FetchNextJob(string[] queues, CancellationToken cancellationToken)
         {
-            if (queues == null)
+            System.Diagnostics.Debug.WriteLine("FetchNextJob CurrentThreadId:" + Thread.CurrentThread.ManagedThreadId);
+            while (true)
             {
-                throw new ArgumentNullException(nameof(queues));
+                foreach (var queue in queues)
+                {
+                    JobQueueSemaphoreSlim.Instance.Wait(queue);
+                    var fetchedJob = this._jobQueueAppService.GetFetchedJobAsync(queue).GetAwaiter().GetResult();
+                    if (fetchedJob == null)
+                        continue;
+                    fetchedJob.FetchedAt = DateTime.Now;
+                    System.Diagnostics.Debug.WriteLine("UpdateFetchedJob.FetchEdAt Thread Id:" + Thread.CurrentThread.ManagedThreadId);
+                    this._jobQueueAppService.UpdateQueueAsync(fetchedJob).GetAwaiter().GetResult();
+                    JobQueueSemaphoreSlim.Instance.Relase(queue);
+                    System.Diagnostics.Debug.WriteLine("Slim Release CurrentThreadId:" + Thread.CurrentThread.ManagedThreadId);
+                    return new ServiceFabricFetchedJob(fetchedJob.Id, fetchedJob.JobId, queue, _jobQueueAppService);
+                }
+                Thread.Sleep(1000);
             }
-
-            if (queues.Length == 0)
-            {
-                throw new ArgumentException("Queue array must be non-empty.", nameof(queues));
-            }
-
-            ServiceFabricFetchedJob fetchedJob = null;
-
-            while (fetchedJob == null)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                fetchedJob = TryAllQueues(queues, cancellationToken);
-
-                if (fetchedJob != null) return fetchedJob;
-                fetchedJob = TryGetEnqueuedJob("", cancellationToken);
-            }
-
-            return fetchedJob;
         }
 
         private ServiceFabricFetchedJob TryAllQueues(string[] queues, CancellationToken cancellationToken)

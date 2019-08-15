@@ -14,6 +14,8 @@ namespace Hangfire.ServiceFabric.Servces
     {
         Task<List<JobQueueDto>> GetQueuesAsync(string queue);
 
+        Task<JobQueueDto> GetFetchedJobAsync(string queue);
+
         Task<JobQueueDto> GetQueueAsync(string id);
 
         Task DeleteQueueJobAsync(string id);

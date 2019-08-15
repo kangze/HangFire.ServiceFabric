@@ -13,22 +13,25 @@ namespace Hangfire.ServiceFabric.Internal
     {
         private readonly string _resource;
         private readonly TimeSpan _timeout;
+        private static readonly SemaphoreSlim Slim = new SemaphoreSlim(1, 1);
         private readonly IResourceLockAppService _resourceLockAppService;
-        private readonly Dictionary<string, HashSet<Guid>> LockedResources = new Dictionary<string, HashSet<Guid>>();
+        private readonly static Dictionary<string, HashSet<Guid>> LockedResources = new Dictionary<string, HashSet<Guid>>();
         private Guid LockId { get; set; }
 
 
         public ServiceFabricDistributedLock(string resource, TimeSpan timeout, IResourceLockAppService resourceLockAppService)
         {
-            this._resource = resource;
-            this._timeout = timeout;
-            this._resourceLockAppService = resourceLockAppService;
-            AcquireLock();
+            //this._resource = resource;
+            //this._timeout = timeout;
+            //this._resourceLockAppService = resourceLockAppService;
+            //AcquireLock();
         }
 
         public IDisposable AcquireLock()
         {
             //开始获取锁
+            return this;
+            Slim.Wait();
             var lockId = Guid.NewGuid();
             if (!LockedResources.ContainsKey(_resource))
             {
@@ -38,7 +41,7 @@ namespace Hangfire.ServiceFabric.Internal
                     do
                     {
                         var b = _resourceLockAppService.LockAsync(_resource).GetAwaiter().GetResult();
-                        if (b) return this;
+                        if (b) break;
                         Thread.Sleep(350);
                     }
                     while (started.Elapsed < _timeout);
@@ -53,11 +56,13 @@ namespace Hangfire.ServiceFabric.Internal
 
             LockedResources[_resource].Add(lockId);
             this.LockId = lockId;
+            Slim.Release();
             return this;
         }
 
         public void Dispose()
         {
+            return;
             if (LockedResources.ContainsKey(_resource))
             {
                 if (LockedResources[_resource].Contains(LockId))

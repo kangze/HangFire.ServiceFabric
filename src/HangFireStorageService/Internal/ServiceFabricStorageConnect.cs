@@ -58,7 +58,19 @@ namespace HangFireStorageService.Internal
 
         public override IFetchedJob FetchNextJob(string[] queues, CancellationToken cancellationToken)
         {
-            return _jobFetcher.FetchNextJob(queues, cancellationToken);
+            do
+            {
+                foreach (var queue in queues)
+                {
+                    var fetchedJob = this._services.JobQueueAppService.GetFetchedJobAsync(queue).GetAwaiter().GetResult();
+                    if (fetchedJob == null)
+                        continue;
+                    fetchedJob.FetchedAt = DateTime.Now;
+                    this._services.JobQueueAppService.UpdateQueueAsync(fetchedJob);
+                    return new ServiceFabricFetchedJob(fetchedJob.Id, fetchedJob.JobId, queue, this._services.JobQueueAppService);
+                }
+                Thread.Sleep(1000);
+            } while (true);
         }
 
         public override void SetJobParameter(string id, string name, string value)
