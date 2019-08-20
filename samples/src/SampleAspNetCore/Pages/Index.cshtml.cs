@@ -29,7 +29,7 @@ namespace SampleAspNetCore.Pages
 
         public void Test()
         {
-            syste
+            //syste
             Console.WriteLine("ok enqueued Jobs!!!");
         }
     }

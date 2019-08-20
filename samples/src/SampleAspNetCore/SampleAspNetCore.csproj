@@ -7,13 +7,13 @@
 
 
   <ItemGroup>
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.7.3" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
   </ItemGroup>
 
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\..\Users\kangze\Downloads\Hangfire-1.7.2\Hangfire-1.7.2\src\Hangfire.AspNetCore\Hangfire.AspNetCore.csproj" />
     <ProjectReference Include="..\..\..\src\HangFireStorageService\Hangfire.ServiceFabric.csproj" />
   </ItemGroup>
 

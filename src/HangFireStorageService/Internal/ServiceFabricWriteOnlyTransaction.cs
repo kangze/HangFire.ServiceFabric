@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Hangfire.Common;
 using Hangfire.ServiceFabric.Dtos;
@@ -69,7 +70,7 @@ namespace HangFireStorageService.Internal
             return jobDto.Id;
         }
 
-        public void SetJobParameter(string id, string name, string value)
+        public async Task SetJobParameter(string id, string name, string value)
         {
             if (id == null)
             {
@@ -84,14 +85,14 @@ namespace HangFireStorageService.Internal
             var jobDto = this._services.JobAppService.GetJobAsync(id).GetAwaiter().GetResult();
             if (jobDto == null)
                 return;
-            if (!string.IsNullOrEmpty(name) && jobDto.Parameters.ContainsKey(name))
-            {
+            if (jobDto.Parameters.ContainsKey(name))
                 jobDto.Parameters[name] = value;
-                this._jobActions.Add((jobAppService) =>
-                {
-                    jobAppService.AddOrUpdateAsync(jobDto).GetAwaiter().GetResult();
-                });
-            }
+            else
+                jobDto.Parameters.Add(name, value);
+            this._jobActions.Add((jobAppService) =>
+            {
+                jobAppService.AddOrUpdateAsync(jobDto).GetAwaiter().GetResult();
+            });
         }
 
         public override void PersistJob(string jobId)
@@ -144,6 +145,7 @@ namespace HangFireStorageService.Internal
             this._jobQueueActions.Add((jobQueueAppService) =>
             {
                 jobQueueAppService.AddToQueueJObAsync(queue, jobId).GetAwaiter().GetResult();
+                ServiceFabricStorageConnect.AutoResetNewEvent.Set();
                 //ServiceFabricJobFetcher.NewItemInQueueEvent.Set();
             });
         }
@@ -188,7 +190,7 @@ namespace HangFireStorageService.Internal
         {
             this._jobSetAppActions.Add((jobSetAppService) =>
             {
-                jobSetAppService.AddSetAsync(key, value, 0.0);
+                jobSetAppService.AddSetAsync(key, value, 0.0).GetAwaiter().GetResult();
             });
         }
 
@@ -196,7 +198,7 @@ namespace HangFireStorageService.Internal
         {
             this._jobSetAppActions.Add((jobSetAppService) =>
             {
-                jobSetAppService.AddSetAsync(key, value, score);
+                jobSetAppService.AddSetAsync(key, value, score).GetAwaiter().GetResult();
             });
         }
 
@@ -204,7 +206,11 @@ namespace HangFireStorageService.Internal
         {
             this._jobSetAppActions.Add((jobSetAppService) =>
             {
-                jobSetAppService.RemoveAsync(key, value);
+                if (key.Contains("w"))
+                {
+                    var s = 10;
+                }
+                jobSetAppService.RemoveAsync(key, value).GetAwaiter().GetResult();
             });
         }
 
@@ -220,7 +226,7 @@ namespace HangFireStorageService.Internal
         {
             this._jobListAppActions.Add((jobListAppService) =>
             {
-                jobListAppService.Remove(key, value);
+                jobListAppService.Remove(key, value).GetAwaiter().GetResult();
             });
         }
 
@@ -228,7 +234,7 @@ namespace HangFireStorageService.Internal
         {
             this._jobListAppActions.Add((jobListAppService) =>
             {
-                jobListAppService.RemoveRange(key, keepStartingFrom, keepEndingAt);
+                jobListAppService.RemoveRange(key, keepStartingFrom, keepEndingAt).GetAwaiter().GetResult();
             });
         }
 
@@ -261,14 +267,22 @@ namespace HangFireStorageService.Internal
             });
         }
 
+        public static bool process = true;
+
         public override void Commit()
         {
+            while (!process)
+            {
+                Thread.Sleep(100);
+            }
+            process = false;
             this._hashActions.ForEach(u => u.Invoke(this._services.HashAppService));
             this._jobActions.ForEach(u => u.Invoke(this._services.JobAppService));
             this._jobQueueActions.ForEach(u => u.Invoke(this._services.JobQueueAppService));
             this._counterAppActions.ForEach(u => u.Invoke(this._services.CounterAppService));
             this._jobSetAppActions.ForEach(u => u.Invoke(this._services.JobSetAppService));
             this._jobListAppActions.ForEach(u => u.Invoke(this._services.ListAppService));
+            process = true;
         }
     }
 }

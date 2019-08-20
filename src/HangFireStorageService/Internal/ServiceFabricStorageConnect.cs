@@ -12,7 +12,6 @@ using Hangfire.ServiceFabric.Internal;
 using Hangfire.ServiceFabric.Servces;
 using Hangfire.Storage;
 using HangFireStorageService.Dto;
-using Mcs.Common.BaseServices;
 
 namespace HangFireStorageService.Internal
 {
@@ -20,6 +19,8 @@ namespace HangFireStorageService.Internal
     {
         private readonly IServiceFabriceStorageServices _services;
         private readonly ServiceFabricJobFetcher _jobFetcher;
+        //这里不进行相关的阻塞
+        public static AutoResetEvent AutoResetNewEvent = new AutoResetEvent(true);
 
         public ServiceFabricStorageConnect(IServiceFabriceStorageServices servies)
         {
@@ -60,6 +61,7 @@ namespace HangFireStorageService.Internal
         {
             do
             {
+                AutoResetNewEvent.WaitOne();
                 foreach (var queue in queues)
                 {
                     var fetchedJob = this._services.JobQueueAppService.GetFetchedJobAsync(queue).GetAwaiter().GetResult();
@@ -69,7 +71,6 @@ namespace HangFireStorageService.Internal
                     this._services.JobQueueAppService.UpdateQueueAsync(fetchedJob);
                     return new ServiceFabricFetchedJob(fetchedJob.Id, fetchedJob.JobId, queue, this._services.JobQueueAppService);
                 }
-                Thread.Sleep(1000);
             } while (true);
         }
 

@@ -25,16 +25,16 @@ namespace Hangfire.ServiceFabric.Servces
             var set_dict = await GetSetDtosDictAsync();
             using (var tx = this._stateManager.CreateTransaction())
             {
-                var set_condition = await set_dict.TryGetValueAsync(tx, key);
+                var set_condition = await set_dict.TryGetValueAsync(tx, key + value);
                 if (set_condition.HasValue)
                 {
                     set_condition.Value.Score = score;
-                    await set_dict.SetAsync(tx, key, set_condition.Value);
+                    await set_dict.SetAsync(tx, key + value, set_condition.Value);
                     await tx.CommitAsync();
                 }
                 else
                 {
-                    await set_dict.SetAsync(tx, key, new SetDto()
+                    await set_dict.SetAsync(tx, key + value, new SetDto()
                     {
                         Key = key,
                         Value = value,
@@ -65,10 +65,9 @@ namespace Hangfire.ServiceFabric.Servces
         public async Task RemoveAsync(string key, string value)
         {
             var set_dict = await GetSetDtosDictAsync();
-            var ls = new List<SetDto>();
             using (var tx = this._stateManager.CreateTransaction())
             {
-                await set_dict.TryRemoveAsync(tx, key);
+                await set_dict.TryRemoveAsync(tx, key + value);
                 await tx.CommitAsync();
             }
         }
