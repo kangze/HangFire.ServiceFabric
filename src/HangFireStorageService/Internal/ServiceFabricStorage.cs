@@ -9,7 +9,7 @@ using Hangfire.ServiceFabric.Servces;
 using Hangfire.Storage;
 using HangFireStorageService.Extensions;
 
-namespace HangFireStorageService.Internal
+namespace Hangfire.ServiceFabric.Internal
 {
     public class ServiceFabricStorage : JobStorage
     {
@@ -36,7 +36,7 @@ namespace HangFireStorageService.Internal
 
         public override IStorageConnection GetConnection()
         {
-            return new ServiceFabricStorageConnect(this._services);
+            return new ServiceFabricStorageConnection(this._services);
         }
     }
 }

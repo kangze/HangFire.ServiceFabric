@@ -21,16 +21,15 @@ namespace Hangfire.ServiceFabric.Internal
 
         public ServiceFabricDistributedLock(string resource, TimeSpan timeout, IResourceLockAppService resourceLockAppService)
         {
-            //this._resource = resource;
-            //this._timeout = timeout;
-            //this._resourceLockAppService = resourceLockAppService;
-            //AcquireLock();
+            this._resource = resource;
+            this._timeout = timeout;
+            this._resourceLockAppService = resourceLockAppService;
+            AcquireLock();
         }
 
         public IDisposable AcquireLock()
         {
-            //开始获取锁
-            return this;
+
             Slim.Wait();
             var lockId = Guid.NewGuid();
             if (!LockedResources.ContainsKey(_resource))
@@ -48,6 +47,8 @@ namespace Hangfire.ServiceFabric.Internal
                 }
                 catch (Exception)
                 {
+
+                    Slim.Release();
                     throw;
                 }
 
@@ -62,7 +63,6 @@ namespace Hangfire.ServiceFabric.Internal
 
         public void Dispose()
         {
-            return;
             if (LockedResources.ContainsKey(_resource))
             {
                 if (LockedResources[_resource].Contains(LockId))

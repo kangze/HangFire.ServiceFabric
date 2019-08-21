@@ -13,19 +13,17 @@ using Hangfire.ServiceFabric.Servces;
 using Hangfire.Storage;
 using HangFireStorageService.Dto;
 
-namespace HangFireStorageService.Internal
+namespace Hangfire.ServiceFabric.Internal
 {
-    internal class ServiceFabricStorageConnect : JobStorageConnection
+    internal class ServiceFabricStorageConnection : JobStorageConnection
     {
         private readonly IServiceFabriceStorageServices _services;
-        private readonly ServiceFabricJobFetcher _jobFetcher;
-        //这里不进行相关的阻塞
+
         public static AutoResetEvent AutoResetNewEvent = new AutoResetEvent(true);
 
-        public ServiceFabricStorageConnect(IServiceFabriceStorageServices servies)
+        public ServiceFabricStorageConnection(IServiceFabriceStorageServices servies)
         {
             this._services = servies;
-            _jobFetcher = new ServiceFabricJobFetcher(servies.JobQueueAppService);
         }
 
         public ServiceFabricWriteOnlyTransaction CreateTransaction()
@@ -78,7 +76,7 @@ namespace HangFireStorageService.Internal
         {
             using (var transaction = CreateTransaction())
             {
-                transaction.SetJobParameter(id, name, value);
+                transaction.SetJobParameter(id, name, value).GetAwaiter().GetResult();
                 transaction.Commit();
             }
         }

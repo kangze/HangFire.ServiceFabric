@@ -7,7 +7,7 @@ using Hangfire.ServiceFabric.Servces;
 
 namespace Hangfire.ServiceFabric.Internal
 {
-    public class ServiceFabriceStorageServices : IServiceFabriceStorageServices
+    public class ServiceFabricStorageServices : IServiceFabriceStorageServices
     {
         public IJobQueueAppService JobQueueAppService { get; }
         public IJobAppService JobAppService { get; }
@@ -19,7 +19,7 @@ namespace Hangfire.ServiceFabric.Internal
         public IListAppService ListAppService { get; }
         public IResourceLockAppService ResourceLockAppService { get; }
 
-        public ServiceFabriceStorageServices(
+        public ServiceFabricStorageServices(
             IJobQueueAppService jobQueueAppService,
             IJobAppService jobAppService,
             IServerAppService serverAppService,

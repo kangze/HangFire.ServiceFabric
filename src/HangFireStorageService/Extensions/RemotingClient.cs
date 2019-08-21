@@ -81,7 +81,7 @@ namespace HangFireStorageService.Extensions
 
         public static IServiceFabriceStorageServices CreateServiceFabricStorageServices()
         {
-            var service = new ServiceFabriceStorageServices(
+            var service = new ServiceFabricStorageServices(
                 CreateJobQueueAppService(),
                 CreateJobAppService(),
                 CreateServiceAppService(),

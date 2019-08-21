@@ -13,7 +13,7 @@ using Hangfire.Storage;
 using Hangfire.Storage.Monitoring;
 using HangFireStorageService.Dto;
 
-namespace HangFireStorageService.Internal
+namespace Hangfire.ServiceFabric.Internal
 {
     public class ServiceFabricMonitoringApi : IMonitoringApi
     {

@@ -1,18 +1,18 @@
-﻿using Hangfire;
-using Hangfire.Annotations;
-using Hangfire.ServiceFabric.Servces;
-using HangFireStorageService.Internal;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.ServiceFabric.Data;
-using Microsoft.ServiceFabric.Services.Communication.Runtime;
-using Microsoft.ServiceFabric.Services.Remoting.V2.FabricTransport.Runtime;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Hangfire;
+using Hangfire.Annotations;
+using Hangfire.ServiceFabric.Servces;
+using Microsoft.ServiceFabric.Data;
+using Microsoft.ServiceFabric.Services.Communication.Runtime;
+using Microsoft.ServiceFabric.Services.Remoting.V2.FabricTransport.Runtime;
+using Hangfire.ServiceFabric.Internal;
+using HangFireStorageService.Extensions;
 
-namespace HangFireStorageService.Extensions
+namespace Hangfire.ServiceFabric.Extensions
 {
     public static class ServiceFabricStorageExtensions
     {

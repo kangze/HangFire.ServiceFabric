@@ -9,7 +9,7 @@ using Hangfire.ServiceFabric.Servces;
 using Hangfire.Storage;
 using HangFireStorageService.Dto;
 
-namespace HangFireStorageService.Internal
+namespace Hangfire.ServiceFabric.Internal
 {
     public class ServiceFabricFetchedJob : IFetchedJob
     {

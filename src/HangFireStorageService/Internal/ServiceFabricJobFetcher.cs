@@ -1,8 +1,6 @@
 ﻿using Hangfire.ServiceFabric.Dtos;
 using Hangfire.ServiceFabric.Servces;
 using Hangfire.Storage;
-using HangFireStorageService.Dto;
-using HangFireStorageService.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;

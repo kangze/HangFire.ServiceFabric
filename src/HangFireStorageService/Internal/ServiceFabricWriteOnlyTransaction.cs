@@ -12,7 +12,7 @@ using Hangfire.States;
 using Hangfire.Storage;
 using HangFireStorageService.Dto;
 
-namespace HangFireStorageService.Internal
+namespace Hangfire.ServiceFabric.Internal
 {
     public class ServiceFabricWriteOnlyTransaction : JobStorageTransaction
     {
@@ -145,7 +145,7 @@ namespace HangFireStorageService.Internal
             this._jobQueueActions.Add((jobQueueAppService) =>
             {
                 jobQueueAppService.AddToQueueJObAsync(queue, jobId).GetAwaiter().GetResult();
-                ServiceFabricStorageConnect.AutoResetNewEvent.Set();
+                ServiceFabricStorageConnection.AutoResetNewEvent.Set();
                 //ServiceFabricJobFetcher.NewItemInQueueEvent.Set();
             });
         }
