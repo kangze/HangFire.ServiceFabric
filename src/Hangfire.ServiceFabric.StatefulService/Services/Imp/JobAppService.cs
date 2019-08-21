@@ -30,7 +30,7 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
                 throw new ArgumentNullException(nameof(jobDto));
             if (jobDto.Id == default)
                 jobDto.Id = Guid.NewGuid().ToString("N");
-            var job_dict= await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobDto>>(Consts.JOB_DICT);
+            var job_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobDto>>(Consts.JOB_DICT);
             using (var tx = this._stateManager.CreateTransaction())
             {
                 await job_dict.SetAsync(tx, jobDto.Id, jobDto);
@@ -99,6 +99,11 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
                 }
                 return ls;
             }
+        }
+
+        public async Task UpdateJobAsync(ITransaction tx, JobDto dto)
+        {
+
         }
     }
 }
