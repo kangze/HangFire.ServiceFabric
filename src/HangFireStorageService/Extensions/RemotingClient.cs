@@ -6,10 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Hangfire.ServiceFabric.Internal;
+using Hangfire.ServiceFabric.Model;
+using Hangfire.ServiceFabric.Model.Interfaces;
 using Microsoft.ServiceFabric.Services.Client;
 using Microsoft.ServiceFabric.Services.Remoting.Client;
 using Microsoft.ServiceFabric.Services.Remoting.V2.FabricTransport.Client;
-using Hangfire.ServiceFabric.Services;
+using Hangfire.ServiceFabric.StatefulService;
 
 namespace Hangfire.ServiceFabric.Extensions
 {

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hangfire.ServiceFabric.Extensions;
+using Hangfire.ServiceFabric.StatefulService;
 using Microsoft.ServiceFabric.Data.Collections;
 using Microsoft.ServiceFabric.Services.Communication.Runtime;
 using Microsoft.ServiceFabric.Services.Runtime;
@@ -17,7 +18,7 @@ namespace HangfireStorage
     internal sealed class HangfireStorage : HangfireStatefulService
     {
         public HangfireStorage(StatefulServiceContext context)
-            : base(context)
+            : base(context, "good")
         { }
 
 

@@ -8,6 +8,8 @@ using Hangfire.ServiceFabric.Dtos;
 using Hangfire.ServiceFabric.Dtos.Internal;
 using Hangfire.ServiceFabric.Entities;
 using Hangfire.ServiceFabric.Internal;
+using Hangfire.ServiceFabric.Model;
+using Hangfire.ServiceFabric.Model.Dtos;
 using Hangfire.States;
 using Hangfire.Storage;
 using Hangfire.Storage.Monitoring;
@@ -19,11 +21,9 @@ namespace Hangfire.ServiceFabric.Internal
     {
         private readonly IServiceFabriceStorageServices _services;
 
-        public ServiceFabricMonitoringApi(
-            IServiceFabriceStorageServices servies
-            )
+        public ServiceFabricMonitoringApi(IServiceFabriceStorageServices services)
         {
-            this._services = servies;
+            this._services = services;
         }
 
         public IList<QueueWithTopEnqueuedJobsDto> Queues()

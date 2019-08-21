@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Hangfire.ServiceFabric.Services;
-
+using Hangfire.ServiceFabric.Model;
+using Hangfire.ServiceFabric.Model.Interfaces;
 namespace Hangfire.ServiceFabric.Internal
 {
     public class ServiceFabricStorageServices : IServiceFabriceStorageServices

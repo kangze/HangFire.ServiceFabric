@@ -9,6 +9,8 @@ using Hangfire.Common;
 using Hangfire.Server;
 using Hangfire.ServiceFabric.Dtos;
 using Hangfire.ServiceFabric.Internal;
+using Hangfire.ServiceFabric.Model;
+using Hangfire.ServiceFabric.Model.Dtos;
 using Hangfire.Storage;
 using HangFireStorageService.Dto;
 

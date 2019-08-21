@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Hangfire;
 using Hangfire.ServiceFabric.Internal;
+using Hangfire.ServiceFabric.Model;
 using Hangfire.Storage;
 
 namespace Hangfire.ServiceFabric.Internal

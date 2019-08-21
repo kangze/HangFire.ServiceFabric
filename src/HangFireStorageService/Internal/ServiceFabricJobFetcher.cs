@@ -6,17 +6,16 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Hangfire.ServiceFabric.Services;
+using Hangfire.ServiceFabric.Model.Dtos;
+using Hangfire.ServiceFabric.Model.Interfaces;
 
 namespace Hangfire.ServiceFabric.Internal
 {
     public class ServiceFabricJobFetcher
     {
-
         private readonly IJobQueueAppService _jobQueueAppService;
         private readonly DateTime _invisibilityTimeout;
         private readonly object lock_obj = new object();
-
 
 
         public ServiceFabricJobFetcher(IJobQueueAppService jobQueueAppService)

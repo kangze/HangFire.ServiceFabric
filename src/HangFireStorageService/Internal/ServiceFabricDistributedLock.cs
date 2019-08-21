@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Hangfire.ServiceFabric.Services;
+using Hangfire.ServiceFabric.Model.Interfaces;
 
 namespace Hangfire.ServiceFabric.Internal
 {
