@@ -4,14 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Hangfire.ServiceFabric.Dtos;
-using Hangfire.ServiceFabric.Entities;
-using Hangfire.ServiceFabric.Servces;
-using HangFireStorageService.Dto;
-using HangFireStorageService.Extensions;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Data.Collections;
 
-namespace Hangfire.ServiceFabric.Servces
+namespace Hangfire.ServiceFabric.Services
 {
     public class JobAppService : IJobAppService
     {

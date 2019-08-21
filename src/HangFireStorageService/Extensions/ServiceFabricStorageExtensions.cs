@@ -5,11 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Hangfire;
 using Hangfire.Annotations;
-using Hangfire.ServiceFabric.Servces;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Services.Communication.Runtime;
 using Microsoft.ServiceFabric.Services.Remoting.V2.FabricTransport.Runtime;
 using Hangfire.ServiceFabric.Internal;
+using Hangfire.ServiceFabric.Services;
 using HangFireStorageService.Extensions;
 
 namespace Hangfire.ServiceFabric.Extensions

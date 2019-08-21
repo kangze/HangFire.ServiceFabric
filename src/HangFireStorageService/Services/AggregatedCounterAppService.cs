@@ -8,7 +8,7 @@ using HangFireStorageService.Extensions;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Data.Collections;
 
-namespace Hangfire.ServiceFabric.Servces
+namespace Hangfire.ServiceFabric.Services
 {
     public class AggregatedCounterAppService : IAggregatedCounterAppService
     {

@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Hangfire.ServiceFabric.Servces
+namespace Hangfire.ServiceFabric.Services
 {
     /// <summary>
     /// DistruibuteLock Imp,If throw Timeout Exception,beacause of gain lock failed

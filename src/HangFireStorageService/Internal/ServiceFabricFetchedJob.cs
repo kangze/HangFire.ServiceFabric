@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hangfire.Common;
-using Hangfire.ServiceFabric.Servces;
+using Hangfire.ServiceFabric.Services;
 using Hangfire.Storage;
 using HangFireStorageService.Dto;
 

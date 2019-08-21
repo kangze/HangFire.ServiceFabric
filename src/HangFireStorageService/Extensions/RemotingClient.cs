@@ -1,15 +1,15 @@
-﻿using Hangfire.ServiceFabric.Internal;
-using Hangfire.ServiceFabric.Servces;
-using Microsoft.ServiceFabric.Services.Client;
-using Microsoft.ServiceFabric.Services.Remoting.Client;
-using Microsoft.ServiceFabric.Services.Remoting.V2.FabricTransport.Client;
-using ServiceFabricContrib;
+﻿using ServiceFabricContrib;
 using System;
 using System.Collections.Generic;
 using System.Fabric;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Hangfire.ServiceFabric.Internal;
+using Microsoft.ServiceFabric.Services.Client;
+using Microsoft.ServiceFabric.Services.Remoting.Client;
+using Microsoft.ServiceFabric.Services.Remoting.V2.FabricTransport.Client;
+using Hangfire.ServiceFabric.Services;
 
 namespace HangFireStorageService.Extensions
 {
