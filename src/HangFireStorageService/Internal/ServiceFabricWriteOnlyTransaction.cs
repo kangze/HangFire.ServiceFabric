@@ -19,27 +19,20 @@ namespace Hangfire.ServiceFabric.Internal
     public class ServiceFabricWriteOnlyTransaction : JobStorageTransaction
     {
         private readonly IServiceFabriceStorageServices _services;
-
-        private readonly List<Action<IHashAppService>> _hashActions = new List<Action<IHashAppService>>();
-        private readonly List<Action<IJobAppService>> _jobActions = new List<Action<IJobAppService>>();
-        private readonly List<Action<IJobQueueAppService>> _jobQueueActions = new List<Action<IJobQueueAppService>>();
-        private readonly List<Action<ICounterAppService>> _counterAppActions = new List<Action<ICounterAppService>>();
-        private readonly List<Action<IJobSetAppService>> _jobSetAppActions = new List<Action<IJobSetAppService>>();
-        private readonly List<Action<IListAppService>> _jobListAppActions = new List<Action<IListAppService>>();
-
-
-        public ServiceFabricWriteOnlyTransaction(IServiceFabriceStorageServices servies)
+        private readonly IList<Action<IServiceFabriceStorageServices>> _actions;
+        public ServiceFabricWriteOnlyTransaction(IServiceFabriceStorageServices services)
         {
-            this._services = servies;
+            this._services = services;
+            this._actions = new List<Action<IServiceFabriceStorageServices>>();
         }
 
         public override void ExpireJob(string jobId, TimeSpan expireIn)
         {
-            this._jobActions.Add((jobAppService) =>
+            this._actions.Add((services) =>
             {
-                var job = jobAppService.GetJobAsync(jobId).GetAwaiter().GetResult();
+                var job = services.JobAppService.GetJobAsync(jobId).GetAwaiter().GetResult();
                 job.ExpireAt = DateTime.UtcNow.Add(expireIn);
-                jobAppService.AddOrUpdateAsync(job).GetAwaiter().GetResult();
+                services.JobAppService.AddOrUpdateAsync(job).GetAwaiter().GetResult();
             });
         }
 
@@ -72,25 +65,18 @@ namespace Hangfire.ServiceFabric.Internal
             return jobDto.Id;
         }
 
-        public async Task SetJobParameter(string id, string name, string value)
+        public void SetJobParameter(string id, string name, string value)
         {
             if (id == null)
-            {
                 throw new ArgumentNullException(nameof(id));
-            }
 
             if (name == null)
-            {
                 throw new ArgumentNullException(nameof(name));
-            }
 
             var jobDto = this._services.JobAppService.GetJobAsync(id).GetAwaiter().GetResult();
             if (jobDto == null)
                 return;
-            if (jobDto.Parameters.ContainsKey(name))
-                jobDto.Parameters[name] = value;
-            else
-                jobDto.Parameters.Add(name, value);
+            jobDto.Parameters.AddOrUpdate(name, value);
             this._jobActions.Add((jobAppService) =>
             {
                 jobAppService.AddOrUpdateAsync(jobDto).GetAwaiter().GetResult();

@@ -12,6 +12,7 @@
     <PackageReference Include="Microsoft.ServiceFabric.Services" Version="3.3.654" />
     <PackageReference Include="Microsoft.ServiceFabric.Services.Remoting" Version="3.3.654" />
     <PackageReference Include="ServiceFabric.Contrib.Common" Version="1.0.27" />
+    <PackageReference Include="Z.ExtensionMethods" Version="2.1.1" />
   </ItemGroup>
 
   <ItemGroup>
