@@ -10,17 +10,30 @@ using Microsoft.ServiceFabric.Services.Communication.Runtime;
 using Microsoft.ServiceFabric.Services.Remoting.V2.FabricTransport.Runtime;
 using Hangfire.ServiceFabric.Internal;
 using Hangfire.ServiceFabric.Services;
-using HangFireStorageService.Extensions;
 
 namespace Hangfire.ServiceFabric.Extensions
 {
     public static class ServiceFabricStorageExtensions
     {
         public static IGlobalConfiguration<ServiceFabricStorage> UseServiceFabric(
-            [NotNull] this IGlobalConfiguration configuration)
+            [NotNull] this IGlobalConfiguration configuration,
+            [NotNull] string applicationUri)
         {
-            RemotingClient.ApplicationUri = "fabric:/HangfireServiceFabricSfApp/HangfireStorage";
-            var storage = ServiceFabricStorage.Create();
+            return UseServiceFabric(configuration, applicationUri, new ServiceFabricStorageOption());
+        }
+
+        public static IGlobalConfiguration<ServiceFabricStorage> UseServiceFabric(
+            [NotNull] this IGlobalConfiguration configuration,
+            [NotNull] string applicationUri,
+            [NotNull] ServiceFabricStorageOption option)
+        {
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+            if (string.IsNullOrEmpty(applicationUri)) throw new ArgumentNullException(nameof(applicationUri));
+            if (option == null) throw new ArgumentNullException(nameof(option));
+
+            var remotingCleint = new RemotingClient(applicationUri);
+            //RemotingClient.ApplicationUri = "fabric:/HangfireServiceFabricSfApp/HangfireStorage";
+            var storage = new ServiceFabricStorage(remotingCleint.CreateServiceFabricStorageServices());
             return configuration.UseStorage(storage);
         }
 

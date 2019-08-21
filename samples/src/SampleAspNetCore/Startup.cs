@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Hangfire.ServiceFabric.Extensions;
-using HangFireStorageService.Extensions;
 
 namespace SampleAspNetCore
 {
@@ -33,7 +32,7 @@ namespace SampleAspNetCore
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
-            services.AddHangfire(x => x.UseServiceFabric());
+            services.AddHangfire(x => x.UseServiceFabric("fabric:/HangfireServiceFabricSfApp/HangfireStorage"));
             services.AddHangfireServer();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }

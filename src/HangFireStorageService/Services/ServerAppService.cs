@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Hangfire.Storage.Monitoring;
 using HangFireStorageService.Dto;
-using HangFireStorageService.Extensions;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Data.Collections;
 

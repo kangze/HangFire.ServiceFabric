@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Hangfire;
 using Hangfire.ServiceFabric.Internal;
 using Hangfire.Storage;
-using HangFireStorageService.Extensions;
 
 namespace Hangfire.ServiceFabric.Internal
 {
@@ -14,17 +13,9 @@ namespace Hangfire.ServiceFabric.Internal
     {
         private readonly IServiceFabriceStorageServices _services;
 
-        private ServiceFabricStorage(
-            IServiceFabriceStorageServices servies
-            )
+        public ServiceFabricStorage(IServiceFabriceStorageServices services)
         {
-            this._services = servies;
-        }
-
-        internal static ServiceFabricStorage Create()
-        {
-            var services = RemotingClient.CreateServiceFabricStorageServices();
-            return new ServiceFabricStorage(services);
+            this._services = services;
         }
 
 

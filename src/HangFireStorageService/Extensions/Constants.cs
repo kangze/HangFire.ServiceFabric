@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HangFireStorageService.Extensions
+namespace Hangfire.ServiceFabric.Extensions
 {
     public static class Constants
     {

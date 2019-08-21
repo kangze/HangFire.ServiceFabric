@@ -1,5 +1,4 @@
 ﻿using HangFireStorageService;
-using HangFireStorageService.Extensions;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Data.Collections;
 using System;

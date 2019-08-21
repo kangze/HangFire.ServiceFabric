@@ -1,7 +1,6 @@
 ﻿using Hangfire.ServiceFabric.Dtos;
 using Hangfire.ServiceFabric.Entities;
 using HangFireStorageService.Dto;
-using HangFireStorageService.Extensions;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Data.Collections;
 using System;

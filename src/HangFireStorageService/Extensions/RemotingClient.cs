@@ -11,75 +11,73 @@ using Microsoft.ServiceFabric.Services.Remoting.Client;
 using Microsoft.ServiceFabric.Services.Remoting.V2.FabricTransport.Client;
 using Hangfire.ServiceFabric.Services;
 
-namespace HangFireStorageService.Extensions
+namespace Hangfire.ServiceFabric.Extensions
 {
     /// <summary>
     /// Remoting,暂时不考虑分区
     /// </summary>
-    internal static class RemotingClient
+    internal class RemotingClient
     {
-        private static ServiceProxyFactory proxyFactory = new ServiceProxyFactory((c) =>
+        private static readonly ServiceProxyFactory ProxyFactory = new ServiceProxyFactory((c) =>
            new FabricTransportServiceRemotingClientFactory());
-        private static FabricClient fabricClient = new FabricClient();
-        public static string ApplicationUri { get; set; }
 
+        private Uri _applicationUri;
 
-        public static IJobAppService CreateJobAppService()
+        public RemotingClient(string applicationUri)
         {
-            var uri = new Uri(ApplicationUri);
-            return proxyFactory.CreateServiceProxy<IJobAppService>(uri, listenerName: Constants.ListenerNames_JobAppService);
+            this._applicationUri = new Uri(applicationUri);
         }
 
-        public static IJobQueueAppService CreateJobQueueAppService()
+
+
+
+        public IJobAppService CreateJobAppService()
         {
-            var uri = new Uri(ApplicationUri);
-            var services = proxyFactory.CreateServiceProxy<IJobQueueAppService>(uri, listenerName: Constants.ListenerNames_JobQueueAppService);
+            return ProxyFactory.CreateServiceProxy<IJobAppService>(_applicationUri, listenerName: Constants.ListenerNames_JobAppService);
+        }
+
+        public IJobQueueAppService CreateJobQueueAppService()
+        {
+            var services = ProxyFactory.CreateServiceProxy<IJobQueueAppService>(_applicationUri, listenerName: Constants.ListenerNames_JobQueueAppService);
             return services;
         }
 
 
-        public static IServerAppService CreateServiceAppService()
+        public IServerAppService CreateServiceAppService()
         {
-            var uri = new Uri(ApplicationUri);
-            return proxyFactory.CreateServiceProxy<IServerAppService>(uri, listenerName: Constants.ListenerNames_ServerAppService);
+            return ProxyFactory.CreateServiceProxy<IServerAppService>(_applicationUri, listenerName: Constants.ListenerNames_ServerAppService);
         }
 
-        public static IAggregatedCounterAppService CreateAggregateCounterAppService()
+        public IAggregatedCounterAppService CreateAggregateCounterAppService()
         {
-            var uri = new Uri(ApplicationUri);
-            return proxyFactory.CreateServiceProxy<IAggregatedCounterAppService>(uri, listenerName: Constants.ListenerNames_AggregatedCounterAppService);
+            return ProxyFactory.CreateServiceProxy<IAggregatedCounterAppService>(_applicationUri, listenerName: Constants.ListenerNames_AggregatedCounterAppService);
         }
 
-        public static ICounterAppService CreateCounterAppService()
+        public ICounterAppService CreateCounterAppService()
         {
-            var uri = new Uri(ApplicationUri);
-            return proxyFactory.CreateServiceProxy<ICounterAppService>(uri, listenerName: Constants.ListenerNames_CounterAppService);
+            return ProxyFactory.CreateServiceProxy<ICounterAppService>(_applicationUri, listenerName: Constants.ListenerNames_CounterAppService);
         }
 
-        public static IJobSetAppService CreateJobSetAppService()
+        public IJobSetAppService CreateJobSetAppService()
         {
-            var uri = new Uri(ApplicationUri);
-            return proxyFactory.CreateServiceProxy<IJobSetAppService>(uri, listenerName: Constants.ListenerNames_JobSetAppService);
+            return ProxyFactory.CreateServiceProxy<IJobSetAppService>(_applicationUri, listenerName: Constants.ListenerNames_JobSetAppService);
         }
 
-        public static IHashAppService CreateHashAppService()
+        public IHashAppService CreateHashAppService()
         {
-            var uri = new Uri(ApplicationUri);
-            return proxyFactory.CreateServiceProxy<IHashAppService>(uri, listenerName: Constants.ListenerNames_HashAppService);
+            return ProxyFactory.CreateServiceProxy<IHashAppService>(_applicationUri, listenerName: Constants.ListenerNames_HashAppService);
         }
 
-        public static IListAppService CreateJobListAppService()
+        public IListAppService CreateJobListAppService()
         {
-            var uri = new Uri(ApplicationUri);
-            return proxyFactory.CreateServiceProxy<IListAppService>(uri, listenerName: Constants.ListenerNames_jobListAppSerivce);
+            return ProxyFactory.CreateServiceProxy<IListAppService>(_applicationUri, listenerName: Constants.ListenerNames_jobListAppSerivce);
         }
-        public static IResourceLockAppService CreateResourceLockAppService()
+        public IResourceLockAppService CreateResourceLockAppService()
         {
-            var uri = new Uri(ApplicationUri);
-            return proxyFactory.CreateServiceProxy<IResourceLockAppService>(uri, listenerName: Constants.ListenerNames_ResourceLockAppService);
+            return ProxyFactory.CreateServiceProxy<IResourceLockAppService>(_applicationUri, listenerName: Constants.ListenerNames_ResourceLockAppService);
         }
 
-        public static IServiceFabriceStorageServices CreateServiceFabricStorageServices()
+        public IServiceFabriceStorageServices CreateServiceFabricStorageServices()
         {
             var service = new ServiceFabricStorageServices(
                 CreateJobQueueAppService(),
