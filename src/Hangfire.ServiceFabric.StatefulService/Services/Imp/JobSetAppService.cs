@@ -24,30 +24,19 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
 
         }
 
-        public async Task AddSetAsync(string key, string value, double score)
+        public async Task AddSetAsync(ITransaction tx, IReliableDictionary2<string, SetDto> setDtoDict, SetDto setDto)
         {
-            var set_dict = await GetSetDtosDictAsync();
-            using (var tx = this._stateManager.CreateTransaction())
+            var key = setDto.Key + setDto.Value;
+            var setCondition = await setDtoDict.TryGetValueAsync(tx, key);
+            if (setCondition.HasValue)
             {
-                var set_condition = await set_dict.TryGetValueAsync(tx, key + value);
-                if (set_condition.HasValue)
-                {
-                    set_condition.Value.Score = score;
-                    await set_dict.SetAsync(tx, key + value, set_condition.Value);
-                    await tx.CommitAsync();
-                }
-                else
-                {
-                    await set_dict.SetAsync(tx, key + value, new SetDto()
-                    {
-                        Key = key,
-                        Value = value,
-                        Score = score
-                    });
-                    await tx.CommitAsync();
-                }
+                setCondition.Value.Score = setDto.Score;
+                await setDtoDict.SetAsync(tx, key, setCondition.Value);
             }
-
+            else
+            {
+                await setDtoDict.SetAsync(tx, key, setDto);
+            }
         }
 
 
@@ -66,14 +55,9 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
             return ls;
         }
 
-        public async Task RemoveAsync(string key, string value)
+        public async Task RemoveAsync(ITransaction tx, IReliableDictionary2<string, SetDto> setDtoDict, SetDto setDto)
         {
-            var set_dict = await GetSetDtosDictAsync();
-            using (var tx = this._stateManager.CreateTransaction())
-            {
-                await set_dict.TryRemoveAsync(tx, key + value);
-                await tx.CommitAsync();
-            }
+            await setDtoDict.TryRemoveAsync(tx, setDto.Key + setDto.Value);
         }
 
         private async Task<IReliableDictionary2<string, SetDto>> GetSetDtosDictAsync()

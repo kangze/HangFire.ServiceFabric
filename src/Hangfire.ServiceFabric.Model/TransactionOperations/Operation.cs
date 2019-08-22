@@ -6,11 +6,16 @@ using System.Threading.Tasks;
 
 namespace Hangfire.ServiceFabric.Model.TransactionOperations
 {
-    public abstract class Operation
+    public class Operation
     {
-        public abstract OperationType OperationType { get; }
+        public OperationType OperationType { get; set; }
 
-        public abstract T GetArguments<T>(object obj);
+        public T GetArguments<T>(object obj)
+        {
+            return default;
+        }
+
+        public object Arg { get; set; }
     }
 
     public enum OperationType

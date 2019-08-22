@@ -10,6 +10,8 @@ using Hangfire.ServiceFabric.Internal;
 using Hangfire.ServiceFabric.Model;
 using Hangfire.ServiceFabric.Model.Dtos;
 using Hangfire.ServiceFabric.Model.Interfaces;
+using Hangfire.ServiceFabric.Model.TransactionOperations;
+using Hangfire.ServiceFabric.Model.TransactionOperations.Arguments;
 using Hangfire.States;
 using Hangfire.Storage;
 using HangFireStorageService.Dto;
@@ -19,20 +21,23 @@ namespace Hangfire.ServiceFabric.Internal
     public class ServiceFabricWriteOnlyTransaction : JobStorageTransaction
     {
         private readonly IServiceFabriceStorageServices _services;
-        private readonly IList<Action<IServiceFabriceStorageServices>> _actions;
+        private readonly IList<Operation> _operations;
         public ServiceFabricWriteOnlyTransaction(IServiceFabriceStorageServices services)
         {
             this._services = services;
-            this._actions = new List<Action<IServiceFabriceStorageServices>>();
+            this._operations = new List<Operation>();
         }
 
         public override void ExpireJob(string jobId, TimeSpan expireIn)
         {
-            this._actions.Add((services) =>
+            this._operations.Add(new Operation()
             {
-                var job = services.JobAppService.GetJobAsync(jobId).GetAwaiter().GetResult();
-                job.ExpireAt = DateTime.UtcNow.Add(expireIn);
-                services.JobAppService.AddOrUpdateAsync(job).GetAwaiter().GetResult();
+                OperationType = OperationType.ExpireJob,
+                Arg = new ExpireJobArg()
+                {
+                    JobId = jobId,
+                    ExpireIn = expireIn,
+                }
             });
         }
 
@@ -56,12 +61,14 @@ namespace Hangfire.ServiceFabric.Internal
                 CreatedAt = createdAt,
                 ExpireAt = createdAt.Add(expireIn)
             };
-
-            this._jobActions.Add((jobAppService) =>
+            this._operations.Add(new Operation()
             {
-                jobAppService.AddOrUpdateAsync(jobDto).GetAwaiter().GetResult();
+                OperationType = OperationType.CreateExpiredJob,
+                Arg = new CreateExpiredJobArg()
+                {
+                    JobDto = jobDto
+                }
             });
-
             return jobDto.Id;
         }
 
@@ -73,204 +80,237 @@ namespace Hangfire.ServiceFabric.Internal
             if (name == null)
                 throw new ArgumentNullException(nameof(name));
 
-            var jobDto = this._services.JobAppService.GetJobAsync(id).GetAwaiter().GetResult();
-            if (jobDto == null)
-                return;
-            jobDto.Parameters.AddOrUpdate(name, value);
-            this._jobActions.Add((jobAppService) =>
+            this._operations.Add(new Operation()
             {
-                jobAppService.AddOrUpdateAsync(jobDto).GetAwaiter().GetResult();
+                OperationType = OperationType.SetJobParameter,
+                Arg = new SetJobParameterArg()
+                {
+                    JobId = id,
+                    Name = name,
+                    Value = value
+                }
             });
         }
 
         public override void PersistJob(string jobId)
         {
-            this._jobActions.Add((jobAppService) =>
+            this._operations.Add(new Operation()
             {
-                var job = jobAppService.GetJobAsync(jobId).GetAwaiter().GetResult();
-                job.ExpireAt = null;
-                jobAppService.AddOrUpdateAsync(job).GetAwaiter().GetResult();
+                OperationType = OperationType.PersistJob,
+                Arg = new PersistJobArg()
+                {
+                    JobId = jobId
+                }
             });
         }
 
         public override void SetJobState(string jobId, IState state)
         {
-            this._jobActions.Add((jobAppService) =>
+            var stateDto = new StateDto
             {
-                var job = jobAppService.GetJobAsync(jobId).GetAwaiter().GetResult();
-                var stateDto = new StateDto
+                Name = state.Name,
+                Reason = state.Reason,
+                CreatedAt = DateTime.UtcNow,
+                Data = state.SerializeData()
+            };
+            this._operations.Add(new Operation()
+            {
+                OperationType = OperationType.SetJobState,
+                Arg = new SetJobStateArg()
                 {
-                    Name = state.Name,
-                    Reason = state.Reason,
-                    CreatedAt = DateTime.UtcNow,
-                    Data = state.SerializeData()
-                };
-                job.StateHistory.Add(stateDto);
-                job.StateName = state.Name;
-                jobAppService.AddOrUpdateAsync(job).GetAwaiter().GetResult();
+                    JobId = jobId,
+                    StateDto = stateDto
+                }
             });
         }
 
         public override void AddJobState(string jobId, IState state)
         {
-            this._jobActions.Add((jobAppService) =>
+            var stateDto = new StateDto
             {
-                var job = jobAppService.GetJobAsync(jobId).GetAwaiter().GetResult();
-                var stateDto = new StateDto
+                Name = state.Name,
+                Reason = state.Reason,
+                CreatedAt = DateTime.UtcNow,
+                Data = state.SerializeData()
+            };
+            this._operations.Add(new Operation()
+            {
+                OperationType = OperationType.AddJobState,
+                Arg = new SetJobStateArg()
                 {
-                    Name = state.Name,
-                    Reason = state.Reason,
-                    CreatedAt = DateTime.UtcNow,
-                    Data = state.SerializeData()
-                };
-                job.StateHistory.Add(stateDto);
-                jobAppService.AddOrUpdateAsync(job).GetAwaiter().GetResult();
+                    JobId = jobId,
+                    StateDto = stateDto
+                }
             });
         }
 
         public override void AddToQueue(string queue, string jobId)
         {
-            this._jobQueueActions.Add((jobQueueAppService) =>
+            this._operations.Add(new Operation()
             {
-                jobQueueAppService.AddToQueueJObAsync(queue, jobId).GetAwaiter().GetResult();
-                ServiceFabricStorageConnection.AutoResetNewEvent.Set();
-                //ServiceFabricJobFetcher.NewItemInQueueEvent.Set();
+                OperationType = OperationType.AddToQueue,
+                Arg = new AddToQueueArg()
+                {
+                    Id = Guid.NewGuid().ToString("N"),
+                    JobId = jobId,
+                    Queue = queue
+                }
             });
+
+            //   ServiceFabricStorageConnection.AutoResetNewEvent.Set();
         }
 
         public override void IncrementCounter(string key)
         {
-            this._counterAppActions.Add((counterAppService) =>
+            this._operations.Add(new Operation()
             {
-                counterAppService.AddAsync(key, null).GetAwaiter().GetResult();
-
+                OperationType = OperationType.IncrementCounter,
+                Arg = new IncrementCounterArg()
+                {
+                    Key = key,
+                    Value = 1,
+                }
             });
         }
 
         public override void IncrementCounter(string key, TimeSpan expireIn)
         {
-            this._counterAppActions.Add((counterAppService) =>
+            this._operations.Add(new Operation()
             {
-                counterAppService.AddAsync(key, expireIn).GetAwaiter().GetResult();
-
+                OperationType = OperationType.IncrementCounter,
+                Arg = new IncrementCounterArg()
+                {
+                    Key = key,
+                    Value = 1,
+                    ExpireIn = expireIn
+                }
             });
         }
 
         public override void DecrementCounter(string key)
         {
-            this._counterAppActions.Add((counterAppService) =>
+            this._operations.Add(new Operation()
             {
-                counterAppService.DecrementAsync(key, -1, null).GetAwaiter().GetResult();
-
+                OperationType = OperationType.IncrementCounter,
+                Arg = new IncrementCounterArg()
+                {
+                    Key = key,
+                    Value = -1,
+                }
             });
         }
 
         public override void DecrementCounter(string key, TimeSpan expireIn)
         {
-            this._counterAppActions.Add((counterAppService) =>
+            this._operations.Add(new Operation()
             {
-                counterAppService.DecrementAsync(key, -1, expireIn).GetAwaiter().GetResult();
-
+                OperationType = OperationType.IncrementCounter,
+                Arg = new IncrementCounterArg()
+                {
+                    Key = key,
+                    Value = -1,
+                    ExpireIn = expireIn
+                }
             });
         }
 
         public override void AddToSet(string key, string value)
         {
-            this._jobSetAppActions.Add((jobSetAppService) =>
-            {
-                jobSetAppService.AddSetAsync(key, value, 0.0).GetAwaiter().GetResult();
-            });
+            AddToSet(key, value, 0.0);
         }
 
         public override void AddToSet(string key, string value, double score)
         {
-            this._jobSetAppActions.Add((jobSetAppService) =>
+            this._operations.Add(new Operation()
             {
-                jobSetAppService.AddSetAsync(key, value, score).GetAwaiter().GetResult();
+                OperationType = OperationType.AddToSet,
+                Arg = new AddToSetArg()
+                {
+                    Key = key,
+                    Value = value,
+                    Score = score
+                }
             });
         }
 
         public override void RemoveFromSet(string key, string value)
         {
-            this._jobSetAppActions.Add((jobSetAppService) =>
+            this._operations.Add(new Operation()
             {
-                if (key.Contains("w"))
+                OperationType = OperationType.RemoveFromSet,
+                Arg = new RemoveFromSetArg()
                 {
-                    var s = 10;
+                    Key = key,
+                    Value = value
                 }
-                jobSetAppService.RemoveAsync(key, value).GetAwaiter().GetResult();
             });
         }
 
         public override void InsertToList(string key, string value)
         {
-            this._jobListAppActions.Add((jobListAppService) =>
+            this._operations.Add(new Operation()
             {
-                jobListAppService.AddAsync(key, value).GetAwaiter().GetResult();
+                OperationType = OperationType.InsertToList,
+                Arg = new InsertToListArg()
+                {
+                    Key = key,
+                    Value = value
+                }
             });
         }
 
         public override void RemoveFromList(string key, string value)
         {
-            this._jobListAppActions.Add((jobListAppService) =>
+            this._operations.Add(new Operation()
             {
-                jobListAppService.Remove(key, value).GetAwaiter().GetResult();
+                OperationType = OperationType.RemoveFromList,
+                Arg = new RemoveFromListArg()
+                {
+                    Key = key,
+                    Value = value
+                }
             });
         }
 
         public override void TrimList(string key, int keepStartingFrom, int keepEndingAt)
         {
-            this._jobListAppActions.Add((jobListAppService) =>
+            this._operations.Add(new Operation()
             {
-                jobListAppService.RemoveRange(key, keepStartingFrom, keepEndingAt).GetAwaiter().GetResult();
+                OperationType = OperationType.TrimList,
+                Arg = new TrimListArg()
+                {
+                    Key = key,
+                    KeepStartingFrom = keepStartingFrom,
+                    KeepEndingAt = keepEndingAt
+                }
             });
         }
 
         public override void SetRangeInHash(string key, IEnumerable<KeyValuePair<string, string>> keyValuePairs)
         {
-            this._hashActions.Add((hashAppService) =>
+            this._operations.Add(new Operation()
             {
-                var hashDto = hashAppService.GetHashDtoAsync(key).GetAwaiter().GetResult();
-                var fields = hashDto == null ? new Dictionary<string, string>() : hashDto.Fields;
-                foreach (var kv in keyValuePairs)
+                OperationType = OperationType.SetRangeInHash,
+                Arg = new SetRangInHashArg()
                 {
-                    fields.TryAdd(kv.Key, kv.Value);
-                }
-                var dto = new HashDto()
-                {
-                    Id = hashDto == null ? Guid.NewGuid().ToString("N") : hashDto.Id,
                     Key = key,
-                    ExpireAt = null,
-                    Fields = fields
-                };
-                hashAppService.AddOrUpdateAsync(dto).GetAwaiter().GetResult();
+                    KeyValuePairs = keyValuePairs
+                }
             });
         }
 
         public override void RemoveHash(string key)
         {
-            this._hashActions.Add((hashAppService) =>
+            this._operations.Add(new Operation()
             {
-                hashAppService.RemoveAsync(key).GetAwaiter().GetResult();
+                OperationType = OperationType.RemoveHash,
+                Arg = new RemoveHashArg() { Key = key }
             });
         }
 
-        public static bool process = true;
-
         public override void Commit()
         {
-            while (!process)
-            {
-                Thread.Sleep(100);
-            }
-            process = false;
-            this._hashActions.ForEach(u => u.Invoke(this._services.HashAppService));
-            this._jobActions.ForEach(u => u.Invoke(this._services.JobAppService));
-            this._jobQueueActions.ForEach(u => u.Invoke(this._services.JobQueueAppService));
-            this._counterAppActions.ForEach(u => u.Invoke(this._services.CounterAppService));
-            this._jobSetAppActions.ForEach(u => u.Invoke(this._services.JobSetAppService));
-            this._jobListAppActions.ForEach(u => u.Invoke(this._services.ListAppService));
-            process = true;
+
         }
     }
 }

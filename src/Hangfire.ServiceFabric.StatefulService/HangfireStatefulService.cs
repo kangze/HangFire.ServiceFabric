@@ -48,7 +48,7 @@ namespace Hangfire.ServiceFabric.StatefulService
                 new ServiceReplicaListener((c) =>
                     new FabricTransportServiceRemotingListener(c, new JobAppService(stateManager,dictNames.JobDictName)) , Constants.ListenerNames_JobAppService),
                 new ServiceReplicaListener((c) =>
-                    new FabricTransportServiceRemotingListener(c, new JobQueueuAppService(stateManager,dictNames.JobQueueDictName)) , Constants.ListenerNames_JobQueueAppService),
+                    new FabricTransportServiceRemotingListener(c, new JobQueueAppService(stateManager,dictNames.JobQueueDictName)) , Constants.ListenerNames_JobQueueAppService),
                 new ServiceReplicaListener((c) =>
                     new FabricTransportServiceRemotingListener(c, new ServerAppService(stateManager,dictNames.ServerDictName)) , Constants.ListenerNames_ServerAppService),
                 new ServiceReplicaListener((c) =>

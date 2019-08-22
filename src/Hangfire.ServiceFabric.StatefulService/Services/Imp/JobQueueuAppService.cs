@@ -12,12 +12,12 @@ using Microsoft.ServiceFabric.Data.Collections;
 
 namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
 {
-    public class JobQueueuAppService : IJobQueueAppService
+    public class JobQueueAppService : IJobQueueAppService
     {
         private readonly IReliableStateManager _stateManager;
         private readonly string _dictName;
 
-        public JobQueueuAppService(IReliableStateManager stateManager, string dictName)
+        public JobQueueAppService(IReliableStateManager stateManager, string dictName)
         {
             this._stateManager = stateManager;
             _dictName = dictName;
@@ -132,6 +132,17 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
                 }
                 return null;
             }
+        }
+
+        public async Task AddAsync(ITransaction tx, IReliableDictionary2<string,JobQueueDto> jobQueueDict, string id, string jobId, string queue)
+        {
+            var dto = new JobQueueDto()
+            {
+                Id = id,
+                Queue = queue,
+                JobId = jobId
+            };
+            await jobQueueDict.SetAsync(tx, dto.Id, dto);
         }
     }
 }

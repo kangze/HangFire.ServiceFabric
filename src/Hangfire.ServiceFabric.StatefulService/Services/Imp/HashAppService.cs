@@ -23,18 +23,9 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
             _dictName = dictName;
         }
 
-        public async Task RemoveAsync(string key)
+        public async Task RemoveAsync(ITransaction tx, IReliableDictionary2<string, HashDto> dict,string key)
         {
-            var hash_dict = await GetHashDtosDictAsync();
-            using (var tx = this._stateManager.CreateTransaction())
-            {
-                var hash_condition = await hash_dict.TryGetValueAsync(tx, key);
-                if (!hash_condition.HasValue)
-                    return;
-                await hash_dict.TryRemoveAsync(tx, key);
-                await tx.CommitAsync();
-                return;
-            }
+            await dict.TryRemoveAsync(tx, key);
         }
 
         public async Task<List<HashDto>> GetAllHashAsync()
@@ -81,6 +72,16 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
         {
             var hash_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, HashDto>>(Consts.HASH_DICT);
             return hash_dict;
+        }
+
+        public async Task SetRangInHash(ITransaction tx, IReliableDictionary2<string, HashDto> dict, string key, IEnumerable<KeyValuePair<string, string>> keyValuePairs)
+        {
+            var hashDto = await dict.TryGetValueAsync(tx, key);
+            if (!hashDto.HasValue)
+                return;
+            foreach (var pair in keyValuePairs)
+                hashDto.Value.Fields.AddOrUpdate(pair.Key, pair.Value);
+            await dict.AddOrUpdateAsync(tx, key, hashDto.Value, (k, v) => hashDto.Value);
         }
     }
 }

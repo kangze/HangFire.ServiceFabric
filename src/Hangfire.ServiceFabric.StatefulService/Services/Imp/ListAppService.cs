@@ -23,19 +23,9 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
             _dictName = dictName;
         }
 
-        public async Task AddAsync(string key, string value)
+        public async Task AddAsync(ITransaction tx, IReliableDictionary2<string, ListDto> listDict, ListDto dto)
         {
-            var list_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, ListDto>>(Consts.LIST_DICT);
-            using (var tx = this._stateManager.CreateTransaction())
-            {
-                await list_dict.AddAsync(tx, key, new ListDto()
-                {
-                    Id = Guid.NewGuid().ToString("N"),
-                    Item = key,
-                    Value = value
-                });
-                await tx.CommitAsync();
-            }
+            await listDict.AddOrUpdateAsync(tx, dto.Id, dto, (k, v) => dto);
         }
 
         public async Task<List<ListDto>> GetListDtoAsync(string key)
@@ -54,6 +44,24 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
             }
         }
 
+        public async Task Remove(ITransaction tx, IReliableDictionary2<string, ListDto> listDict, ListDto dto)
+        {
+            var emulator = (await listDict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+            string id = string.Empty;
+            while (await emulator.MoveNextAsync(default))
+            {
+                if (emulator.Current.Value.Item == dto.Item && emulator.Current.Value.Value == dto.Value)
+                {
+                    id = emulator.Current.Value.Id;
+                    break;
+                }
+
+            }
+
+            if (!string.IsNullOrEmpty(id))
+                await listDict.TryRemoveAsync(tx, id);
+        }
+
         public async Task Remove(string key, string value)
         {
             var list_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobListDto>>(Consts.LIST_DICT);
@@ -64,24 +72,17 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
             }
         }
 
-        public async Task RemoveRange(string key, int keepStartingFrom, int keepEndingAt)
+        public async Task RemoveRange(ITransaction tx, IReliableDictionary2<string, ListDto> listDict, string key, int keepStartingFrom, int keepEndingAt)
         {
-            var list_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, ListDto>>(Consts.LIST_DICT);
-            using (var tx = this._stateManager.CreateTransaction())
-            {
-                var emulator = (await list_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
-                var ls = new List<ListDto>();
-                while (await emulator.MoveNextAsync(default))
-                {
-                    ls.Add(emulator.Current.Value);
-                }
-                var removed = ls.OrderBy(u => u.Item).Skip(keepEndingAt).Take(keepEndingAt - keepStartingFrom).ToList();
-                foreach (var re in removed)
-                {
-                    await list_dict.TryRemoveAsync(tx, re.Item);
-                }
-                await tx.CommitAsync();
-            }
+
+            var emulator = (await listDict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+            var ls = new List<ListDto>();
+            while (await emulator.MoveNextAsync(default))
+                ls.Add(emulator.Current.Value);
+            var removed = ls.OrderBy(u => u.Item).Skip(keepEndingAt).Take(keepEndingAt - keepStartingFrom).ToList();
+            foreach (var re in removed)
+                await listDict.TryRemoveAsync(tx, re.Item);
+
         }
     }
 }

@@ -77,7 +77,7 @@ namespace Hangfire.ServiceFabric.Internal
         {
             using (var transaction = CreateTransaction())
             {
-                transaction.SetJobParameter(id, name, value).GetAwaiter().GetResult();
+                transaction.SetJobParameter(id, name, value);
                 transaction.Commit();
             }
         }

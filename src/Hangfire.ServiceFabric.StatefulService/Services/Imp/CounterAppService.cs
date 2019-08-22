@@ -23,19 +23,9 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
             this._dictName = dictName;
         }
 
-        public async Task AddAsync(string key, TimeSpan? expireIn)
+        public async Task AddAsync(ITransaction tx, IReliableDictionary2<string, CounterDto> counterDict, CounterDto dto)
         {
-            var counter_dict = await GetCounterDtosDictAsync();
-            using (var tx = this._stateManager.CreateTransaction())
-            {
-                var dto = new CounterDto();
-                dto.Id = Guid.NewGuid().ToString("N");
-                dto.Key = key;
-                dto.Value = 1;
-                dto.ExpireAt = expireIn.HasValue ? (DateTime?)DateTime.UtcNow.Add(expireIn.Value) : null;
-                await counter_dict.SetAsync(tx, dto.Id, dto);
-                await tx.CommitAsync();
-            }
+            await counterDict.AddOrUpdateAsync(tx, dto.Id, dto, (k, v) => dto);
         }
 
         public async Task DecrementAsync(string key, long amount, TimeSpan? expireIn)
