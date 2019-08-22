@@ -15,7 +15,7 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
     public class TransactionAppService : ITransactionAppService
     {
         private readonly IReliableStateManager _stateManager;
-        private readonly string _dictName;
+        private readonly DictNames _dictNames;
         private readonly JobAppService _jobAppService;
         private readonly JobQueueAppService _jobQueueAppService;
         private readonly CounterAppService _counterAppService;
@@ -31,16 +31,16 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
         private IReliableDictionary2<string, ListDto> _listDict;
         private IReliableDictionary2<string, HashDto> _hashDict;
 
-        public TransactionAppService(IReliableStateManager stateManager, string dictName)
+        public TransactionAppService(IReliableStateManager stateManager, DictNames dictNames)
         {
             _stateManager = stateManager;
-            _dictName = dictName;
-            _jobAppService = new JobAppService(stateManager, dictName);
-            _jobQueueAppService = new JobQueueAppService(stateManager, dictName);
-            _counterAppService = new CounterAppService(stateManager, dictName);
-            _setAppService = new JobSetAppService(stateManager, dictName);
-            _listAppService = new ListAppService(stateManager, dictName);
-            _hashAppService = new HashAppService(stateManager, dictName);
+            _dictNames = dictNames;
+            _jobAppService = new JobAppService(stateManager, dictNames.JobDictName);
+            _jobQueueAppService = new JobQueueAppService(stateManager, dictNames.JobQueueDictName);
+            _counterAppService = new CounterAppService(stateManager, dictNames.CounterDictName);
+            _setAppService = new JobSetAppService(stateManager, dictNames.SetDictName);
+            _listAppService = new ListAppService(stateManager, dictNames.ListDictName);
+            _hashAppService = new HashAppService(stateManager, dictNames.HashDictName);
         }
 
 
@@ -174,12 +174,12 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
 
         private async Task InitDataStoresAsync()
         {
-            this._jobDtoDict = await StoreFactory.CreateJobDictAsync(this._stateManager, this._dictName);
-            this._jobQueueDict = await StoreFactory.CreateJobQueueDictAsync(this._stateManager, this._dictName);
-            this._counterDict = await StoreFactory.CreateCounterDictAsync(this._stateManager, this._dictName);
-            this._setDict = await StoreFactory.CreateSetDictAsync(this._stateManager, this._dictName);
-            this._listDict = await StoreFactory.CreateListDictAsync(this._stateManager, this._dictName);
-            this._hashDict = await StoreFactory.CreateHashDictAsync(this._stateManager, this._dictName);
+            this._jobDtoDict = await StoreFactory.CreateJobDictAsync(this._stateManager, this._dictNames.JobDictName);
+            this._jobQueueDict = await StoreFactory.CreateJobQueueDictAsync(this._stateManager, this._dictNames.JobQueueDictName);
+            this._counterDict = await StoreFactory.CreateCounterDictAsync(this._stateManager, this._dictNames.CounterDictName);
+            this._setDict = await StoreFactory.CreateSetDictAsync(this._stateManager, this._dictNames.SetDictName);
+            this._listDict = await StoreFactory.CreateListDictAsync(this._stateManager, this._dictNames.ListDictName);
+            this._hashDict = await StoreFactory.CreateHashDictAsync(this._stateManager, this._dictNames.HashDictName);
         }
     }
 }

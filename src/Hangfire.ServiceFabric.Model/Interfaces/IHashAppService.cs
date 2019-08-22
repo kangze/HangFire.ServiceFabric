@@ -10,12 +10,9 @@ namespace Hangfire.ServiceFabric.Model.Interfaces
 {
     public interface IHashAppService : IService
     {
-        Task RemoveAsync(string key);
 
         Task<HashDto> GetHashDtoAsync(string key);
 
         Task<List<HashDto>> GetAllHashAsync();
-
-        Task AddOrUpdateAsync(HashDto dto);
     }
 }

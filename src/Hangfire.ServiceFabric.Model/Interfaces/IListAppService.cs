@@ -10,12 +10,6 @@ namespace Hangfire.ServiceFabric.Model.Interfaces
 {
     public interface IListAppService : IService
     {
-        Task RemoveRange(string key, int keepStartingFrom, int keepEndingAt);
-
-        Task AddAsync(string key, string value);
-
-        Task Remove(string key, string value);
-
         Task<List<ListDto>> GetListDtoAsync(string key);
     }
 }

@@ -12,9 +12,7 @@ namespace Hangfire.ServiceFabric.Model.Interfaces
     {
         Task<List<CounterDto>> GetAllCounterAsync();
 
-        Task AddAsync(string key, TimeSpan? expireIn);
 
-        Task DecrementAsync(string key, long amount, TimeSpan? expireIn);
 
         Task<CounterDto> GetCounterAsync(string key);
     }

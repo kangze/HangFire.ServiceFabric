@@ -19,6 +19,8 @@ namespace Hangfire.ServiceFabric.Internal
         public IListAppService ListAppService { get; }
         public IResourceLockAppService ResourceLockAppService { get; }
 
+        public ITransactionAppService TransactionAppService { get; set; }
+
         public ServiceFabricStorageServices(
             IJobQueueAppService jobQueueAppService,
             IJobAppService jobAppService,
@@ -28,7 +30,8 @@ namespace Hangfire.ServiceFabric.Internal
             IJobSetAppService jobSetAppService,
             IHashAppService hashAppService,
             IListAppService jobListAppService,
-            IResourceLockAppService resourceLockAppService
+            IResourceLockAppService resourceLockAppService,
+            ITransactionAppService transactionAppService
             )
         {
             this.JobQueueAppService = jobQueueAppService;
@@ -40,6 +43,7 @@ namespace Hangfire.ServiceFabric.Internal
             this.HashAppService = hashAppService;
             this.ListAppService = jobListAppService;
             this.ResourceLockAppService = resourceLockAppService;
+            this.TransactionAppService = transactionAppService;
         }
     }
 }

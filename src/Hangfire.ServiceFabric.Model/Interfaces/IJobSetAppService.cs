@@ -11,10 +11,5 @@ namespace Hangfire.ServiceFabric.Model.Interfaces
     public interface IJobSetAppService : IService
     {
         Task<List<SetDto>> GetSetsAsync();
-
-        Task AddSetAsync(string key, string value, double score);
-
-        Task RemoveAsync(string key, string value);
-
     }
 }

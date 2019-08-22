@@ -21,7 +21,7 @@ namespace Hangfire.ServiceFabric.Internal
     public class ServiceFabricWriteOnlyTransaction : JobStorageTransaction
     {
         private readonly IServiceFabriceStorageServices _services;
-        private readonly IList<Operation> _operations;
+        private readonly List<Operation> _operations;
         public ServiceFabricWriteOnlyTransaction(IServiceFabriceStorageServices services)
         {
             this._services = services;
@@ -310,7 +310,7 @@ namespace Hangfire.ServiceFabric.Internal
 
         public override void Commit()
         {
-
+            _services.TransactionAppService.CommitAsync(this._operations);
         }
     }
 }

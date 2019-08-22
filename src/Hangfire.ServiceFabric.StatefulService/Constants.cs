@@ -19,5 +19,6 @@ namespace Hangfire.ServiceFabric.StatefulService
         public const string ListenerNames_HashAppService = "HashAppService";
         public const string ListenerNames_jobListAppSerivce = "JobListAppService";
         public const string ListenerNames_ResourceLockAppService = "ResourceLockAppService";
+        public const string ListenerNames_TransactionAppService = "TransactionAppService";
     }
 }

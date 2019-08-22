@@ -9,9 +9,8 @@ namespace Hangfire.ServiceFabric.Model.Interfaces
 {
     public interface IJobAppService : IService
     {
-        Task<JobDto> AddOrUpdateAsync(JobDto jobDto);
 
-        Task<JobDto> GetJobAsync(string JobId);
+        Task<JobDto> GetJobAsync(string jobId);
 
         Task<List<JobDto>> GetJobsByStateNameAsync(string stateName);
 

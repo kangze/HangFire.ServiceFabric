@@ -79,6 +79,11 @@ namespace Hangfire.ServiceFabric.Extensions
             return ProxyFactory.CreateServiceProxy<IResourceLockAppService>(_applicationUri, listenerName: Constants.ListenerNames_ResourceLockAppService);
         }
 
+        public ITransactionAppService CreateTransactionAppService()
+        {
+            return ProxyFactory.CreateServiceProxy<ITransactionAppService>(_applicationUri, listenerName: Constants.ListenerNames_TransactionAppService);
+        }
+
         public IServiceFabriceStorageServices CreateServiceFabricStorageServices()
         {
             var service = new ServiceFabricStorageServices(
@@ -90,7 +95,8 @@ namespace Hangfire.ServiceFabric.Extensions
                 CreateJobSetAppService(),
                 CreateHashAppService(),
                 CreateJobListAppService(),
-                CreateResourceLockAppService()
+                CreateResourceLockAppService(),
+                CreateTransactionAppService()
                 );
             return service;
         }

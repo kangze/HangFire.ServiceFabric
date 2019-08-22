@@ -18,5 +18,7 @@ namespace Hangfire.ServiceFabric.Model
         IHashAppService HashAppService { get; }
         IListAppService ListAppService { get; }
         IResourceLockAppService ResourceLockAppService { get; }
+
+        ITransactionAppService TransactionAppService { get; }
     }
 }

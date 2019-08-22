@@ -23,17 +23,12 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
             _dictName = dictName;
         }
 
-        public async Task AddAsync(ITransaction tx, IReliableDictionary2<string, ListDto> listDict, ListDto dto)
-        {
-            await listDict.AddOrUpdateAsync(tx, dto.Id, dto, (k, v) => dto);
-        }
-
         public async Task<List<ListDto>> GetListDtoAsync(string key)
         {
-            var list_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, ListDto>>(Consts.LIST_DICT);
+            var listDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, ListDto>>(Consts.LIST_DICT);
             using (var tx = this._stateManager.CreateTransaction())
             {
-                var emulator = (await list_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+                var emulator = (await listDict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
                 var list = new List<ListDto>();
                 while (await emulator.MoveNextAsync(default))
                 {
@@ -42,6 +37,11 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
                 }
                 return list;
             }
+        }
+
+        public async Task AddAsync(ITransaction tx, IReliableDictionary2<string, ListDto> listDict, ListDto dto)
+        {
+            await listDict.AddOrUpdateAsync(tx, dto.Id, dto, (k, v) => dto);
         }
 
         public async Task Remove(ITransaction tx, IReliableDictionary2<string, ListDto> listDict, ListDto dto)
@@ -62,16 +62,6 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
                 await listDict.TryRemoveAsync(tx, id);
         }
 
-        public async Task Remove(string key, string value)
-        {
-            var list_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobListDto>>(Consts.LIST_DICT);
-            using (var tx = this._stateManager.CreateTransaction())
-            {
-                await list_dict.TryRemoveAsync(tx, key);
-                await tx.CommitAsync();
-            }
-        }
-
         public async Task RemoveRange(ITransaction tx, IReliableDictionary2<string, ListDto> listDict, string key, int keepStartingFrom, int keepEndingAt)
         {
 
@@ -82,7 +72,6 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
             var removed = ls.OrderBy(u => u.Item).Skip(keepEndingAt).Take(keepEndingAt - keepStartingFrom).ToList();
             foreach (var re in removed)
                 await listDict.TryRemoveAsync(tx, re.Item);
-
         }
     }
 }

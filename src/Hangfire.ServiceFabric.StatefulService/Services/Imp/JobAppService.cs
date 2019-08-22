@@ -22,23 +22,6 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
             this._stateManager = stateManager;
             _dictName = dictName;
         }
-
-
-        public async Task<JobDto> AddOrUpdateAsync(JobDto jobDto)
-        {
-            if (jobDto == null)
-                throw new ArgumentNullException(nameof(jobDto));
-            if (jobDto.Id == default)
-                jobDto.Id = Guid.NewGuid().ToString("N");
-            var jobDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobDto>>(Consts.JOB_DICT);
-            using (var tx = this._stateManager.CreateTransaction())
-            {
-                await this.UpdateJobAsync(tx, jobDict, jobDto.Id, u => jobDto);
-                await tx.CommitAsync();
-                return jobDto;
-            }
-        }
-
         public async Task<JobDto> GetJobAsync(string JobId)
         {
             var job_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobDto>>(Consts.JOB_DICT);

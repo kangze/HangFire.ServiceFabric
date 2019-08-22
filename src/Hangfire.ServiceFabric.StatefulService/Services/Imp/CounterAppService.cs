@@ -23,68 +23,29 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
             this._dictName = dictName;
         }
 
-        public async Task AddAsync(ITransaction tx, IReliableDictionary2<string, CounterDto> counterDict, CounterDto dto)
+        public async Task<CounterDto> GetCounterAsync(string key)
         {
-            await counterDict.AddOrUpdateAsync(tx, dto.Id, dto, (k, v) => dto);
-        }
-
-        public async Task DecrementAsync(string key, long amount, TimeSpan? expireIn)
-        {
-            var counter_dict = await GetCounterDtosDictAsync();
+            var counterDict = await StoreFactory.CreateCounterDictAsync(this._stateManager, this._dictName);
             using (var tx = this._stateManager.CreateTransaction())
             {
-                var enumlater = (await counter_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
-                while (await enumlater.MoveNextAsync(default))
+                var ls = new List<CounterDto>();
+                var enumerater = (await counterDict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+                while (await enumerater.MoveNextAsync(default))
                 {
-                    if (enumlater.Current.Value.Key == key)
-                    {
-                        var existedDto = enumlater.Current.Value;
-                        existedDto.Value += amount;
-                        if (expireIn != null)
-                        {
-                            existedDto.ExpireAt = DateTime.UtcNow.Add(expireIn.Value);
-                        }
-                        await counter_dict.SetAsync(tx, existedDto.Id, existedDto);
-                        await tx.CommitAsync();
-                        return;
-                    }
-
+                    if (enumerater.Current.Value.Key == key)
+                        return enumerater.Current.Value;
                 }
-
-                //to add
-                var dto = new CounterDto()
-                {
-                    Id = Guid.NewGuid().ToString("N"),
-                    Key = key,
-                    Value = amount
-                };
-                if (expireIn != null)
-                {
-                    dto.ExpireAt = DateTime.UtcNow.Add(expireIn.Value);
-                }
-                await counter_dict.SetAsync(tx, dto.Id, dto);
-                await tx.CommitAsync();
-            }
-
-            using (var tx = this._stateManager.CreateTransaction())
-            {
-                var dto = new CounterDto();
-                dto.Id = Guid.NewGuid().ToString("N");
-                dto.Key = key;
-                dto.Value = dto.Value - 1;
-                dto.ExpireAt = expireIn.HasValue ? (DateTime?)DateTime.UtcNow.Add(expireIn.Value) : null;
-                await counter_dict.SetAsync(tx, dto.Id, dto);
-                await tx.CommitAsync();
+                return null;
             }
         }
 
         public async Task<List<CounterDto>> GetAllCounterAsync()
         {
-            var counter_dict = await GetCounterDtosDictAsync();
+            var counterDict = await StoreFactory.CreateCounterDictAsync(this._stateManager, this._dictName);
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var ls = new List<CounterDto>();
-                var enumlater = (await counter_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+                var enumlater = (await counterDict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
                 while (await enumlater.MoveNextAsync(default))
                 {
                     ls.Add(enumlater.Current.Value);
@@ -93,26 +54,9 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
             }
         }
 
-        public async Task<CounterDto> GetCounterAsync(string key)
+        public async Task AddAsync(ITransaction tx, IReliableDictionary2<string, CounterDto> counterDict, CounterDto dto)
         {
-            var counter_dict = await GetCounterDtosDictAsync();
-            using (var tx = this._stateManager.CreateTransaction())
-            {
-                var ls = new List<CounterDto>();
-                var enumlater = (await counter_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
-                while (await enumlater.MoveNextAsync(default))
-                {
-                    if (enumlater.Current.Value.Key == key)
-                        return enumlater.Current.Value;
-                }
-                return null;
-            }
-        }
-
-        private async Task<IReliableDictionary2<string, CounterDto>> GetCounterDtosDictAsync()
-        {
-            var counter_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, CounterDto>>(Consts.COUNTER);
-            return counter_dict;
+            await counterDict.AddOrUpdateAsync(tx, dto.Id, dto, (k, v) => dto);
         }
     }
 }

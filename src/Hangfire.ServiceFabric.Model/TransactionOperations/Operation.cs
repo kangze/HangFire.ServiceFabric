@@ -1,20 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Hangfire.ServiceFabric.Model.TransactionOperations
 {
+    [DataContract]
     public class Operation
     {
+        [DataMember]
         public OperationType OperationType { get; set; }
 
         public T GetArguments<T>(object obj)
+        where T : class
         {
-            return default;
+            return obj as T;
         }
 
+        [DataMember]
         public object Arg { get; set; }
     }
 
