@@ -60,7 +60,7 @@ namespace Hangfire.ServiceFabric.Internal
         {
             do
             {
-                AutoResetNewEvent.WaitOne();
+                //AutoResetNewEvent.WaitOne();
                 foreach (var queue in queues)
                 {
                     var fetchedJob = this._services.JobQueueAppService.GetFetchedJobAsync(queue).GetAwaiter().GetResult();
