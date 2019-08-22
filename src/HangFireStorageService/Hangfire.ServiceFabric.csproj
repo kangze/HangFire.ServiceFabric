@@ -17,6 +17,5 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Hangfire.ServiceFabric.Model\Hangfire.ServiceFabric.Model.csproj" />
-    <ProjectReference Include="..\Hangfire.ServiceFabric.StatefulService\Hangfire.ServiceFabric.StatefulService.csproj" />
   </ItemGroup>
 </Project>

@@ -62,7 +62,7 @@ namespace Hangfire.ServiceFabric.StatefulService
                 new ServiceReplicaListener((c) =>
                     new FabricTransportServiceRemotingListener(c, new ResourceLockAppService(stateManager,dictNames.LockDictName)) , Constants.ListenerNames_ResourceLockAppService),
                 new ServiceReplicaListener((c) =>
-                    new FabricTransportServiceRemotingListener(c, new TransactionAppService(stateManager,dictNames)) , Constants.ListenerNames_ResourceLockAppService)
+                    new FabricTransportServiceRemotingListener(c, new TransactionAppService(stateManager,dictNames)) , Constants.ListenerNames_TransactionAppService)
             };
             
         }

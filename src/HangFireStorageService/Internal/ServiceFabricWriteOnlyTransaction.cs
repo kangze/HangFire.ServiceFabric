@@ -15,6 +15,7 @@ using Hangfire.ServiceFabric.Model.TransactionOperations.Arguments;
 using Hangfire.States;
 using Hangfire.Storage;
 using HangFireStorageService.Dto;
+using Newtonsoft.Json;
 
 namespace Hangfire.ServiceFabric.Internal
 {
@@ -33,11 +34,11 @@ namespace Hangfire.ServiceFabric.Internal
             this._operations.Add(new Operation()
             {
                 OperationType = OperationType.ExpireJob,
-                Arg = new ExpireJobArg()
+                Arg = JsonConvert.SerializeObject(new ExpireJobArg()
                 {
                     JobId = jobId,
                     ExpireIn = expireIn,
-                }
+                })
             });
         }
 
@@ -64,10 +65,10 @@ namespace Hangfire.ServiceFabric.Internal
             this._operations.Add(new Operation()
             {
                 OperationType = OperationType.CreateExpiredJob,
-                Arg = new CreateExpiredJobArg()
+                Arg = JsonConvert.SerializeObject(new CreateExpiredJobArg()
                 {
                     JobDto = jobDto
-                }
+                })
             });
             return jobDto.Id;
         }
@@ -83,12 +84,12 @@ namespace Hangfire.ServiceFabric.Internal
             this._operations.Add(new Operation()
             {
                 OperationType = OperationType.SetJobParameter,
-                Arg = new SetJobParameterArg()
+                Arg = JsonConvert.SerializeObject(new SetJobParameterArg()
                 {
                     JobId = id,
                     Name = name,
                     Value = value
-                }
+                })
             });
         }
 
@@ -97,10 +98,10 @@ namespace Hangfire.ServiceFabric.Internal
             this._operations.Add(new Operation()
             {
                 OperationType = OperationType.PersistJob,
-                Arg = new PersistJobArg()
+                Arg = JsonConvert.SerializeObject(new PersistJobArg()
                 {
                     JobId = jobId
-                }
+                })
             });
         }
 
@@ -116,11 +117,11 @@ namespace Hangfire.ServiceFabric.Internal
             this._operations.Add(new Operation()
             {
                 OperationType = OperationType.SetJobState,
-                Arg = new SetJobStateArg()
+                Arg = JsonConvert.SerializeObject(new SetJobStateArg()
                 {
                     JobId = jobId,
                     StateDto = stateDto
-                }
+                })
             });
         }
 
@@ -136,11 +137,11 @@ namespace Hangfire.ServiceFabric.Internal
             this._operations.Add(new Operation()
             {
                 OperationType = OperationType.AddJobState,
-                Arg = new SetJobStateArg()
+                Arg = JsonConvert.SerializeObject(new SetJobStateArg()
                 {
                     JobId = jobId,
                     StateDto = stateDto
-                }
+                })
             });
         }
 
@@ -149,12 +150,12 @@ namespace Hangfire.ServiceFabric.Internal
             this._operations.Add(new Operation()
             {
                 OperationType = OperationType.AddToQueue,
-                Arg = new AddToQueueArg()
+                Arg = JsonConvert.SerializeObject(new AddToQueueArg()
                 {
                     Id = Guid.NewGuid().ToString("N"),
                     JobId = jobId,
                     Queue = queue
-                }
+                })
             });
 
             //   ServiceFabricStorageConnection.AutoResetNewEvent.Set();
@@ -165,11 +166,11 @@ namespace Hangfire.ServiceFabric.Internal
             this._operations.Add(new Operation()
             {
                 OperationType = OperationType.IncrementCounter,
-                Arg = new IncrementCounterArg()
+                Arg = JsonConvert.SerializeObject(new IncrementCounterArg()
                 {
                     Key = key,
                     Value = 1,
-                }
+                })
             });
         }
 
@@ -178,12 +179,12 @@ namespace Hangfire.ServiceFabric.Internal
             this._operations.Add(new Operation()
             {
                 OperationType = OperationType.IncrementCounter,
-                Arg = new IncrementCounterArg()
+                Arg = JsonConvert.SerializeObject(new IncrementCounterArg()
                 {
                     Key = key,
                     Value = 1,
                     ExpireIn = expireIn
-                }
+                })
             });
         }
 
@@ -192,11 +193,11 @@ namespace Hangfire.ServiceFabric.Internal
             this._operations.Add(new Operation()
             {
                 OperationType = OperationType.IncrementCounter,
-                Arg = new IncrementCounterArg()
+                Arg = JsonConvert.SerializeObject(new IncrementCounterArg()
                 {
                     Key = key,
                     Value = -1,
-                }
+                })
             });
         }
 
@@ -205,12 +206,12 @@ namespace Hangfire.ServiceFabric.Internal
             this._operations.Add(new Operation()
             {
                 OperationType = OperationType.IncrementCounter,
-                Arg = new IncrementCounterArg()
+                Arg = JsonConvert.SerializeObject(new IncrementCounterArg()
                 {
                     Key = key,
                     Value = -1,
                     ExpireIn = expireIn
-                }
+                })
             });
         }
 
@@ -224,12 +225,12 @@ namespace Hangfire.ServiceFabric.Internal
             this._operations.Add(new Operation()
             {
                 OperationType = OperationType.AddToSet,
-                Arg = new AddToSetArg()
+                Arg = JsonConvert.SerializeObject(new AddToSetArg()
                 {
                     Key = key,
                     Value = value,
                     Score = score
-                }
+                })
             });
         }
 
@@ -238,11 +239,11 @@ namespace Hangfire.ServiceFabric.Internal
             this._operations.Add(new Operation()
             {
                 OperationType = OperationType.RemoveFromSet,
-                Arg = new RemoveFromSetArg()
+                Arg = JsonConvert.SerializeObject(new RemoveFromSetArg()
                 {
                     Key = key,
                     Value = value
-                }
+                })
             });
         }
 
@@ -251,11 +252,11 @@ namespace Hangfire.ServiceFabric.Internal
             this._operations.Add(new Operation()
             {
                 OperationType = OperationType.InsertToList,
-                Arg = new InsertToListArg()
+                Arg = JsonConvert.SerializeObject(new InsertToListArg()
                 {
                     Key = key,
                     Value = value
-                }
+                })
             });
         }
 
@@ -264,11 +265,11 @@ namespace Hangfire.ServiceFabric.Internal
             this._operations.Add(new Operation()
             {
                 OperationType = OperationType.RemoveFromList,
-                Arg = new RemoveFromListArg()
+                Arg = JsonConvert.SerializeObject(new RemoveFromListArg()
                 {
                     Key = key,
                     Value = value
-                }
+                })
             });
         }
 
@@ -277,12 +278,12 @@ namespace Hangfire.ServiceFabric.Internal
             this._operations.Add(new Operation()
             {
                 OperationType = OperationType.TrimList,
-                Arg = new TrimListArg()
+                Arg = JsonConvert.SerializeObject(new TrimListArg()
                 {
                     Key = key,
                     KeepStartingFrom = keepStartingFrom,
                     KeepEndingAt = keepEndingAt
-                }
+                })
             });
         }
 
@@ -291,11 +292,11 @@ namespace Hangfire.ServiceFabric.Internal
             this._operations.Add(new Operation()
             {
                 OperationType = OperationType.SetRangeInHash,
-                Arg = new SetRangInHashArg()
+                Arg = JsonConvert.SerializeObject(new SetRangInHashArg()
                 {
                     Key = key,
                     KeyValuePairs = keyValuePairs
-                }
+                })
             });
         }
 
@@ -304,13 +305,13 @@ namespace Hangfire.ServiceFabric.Internal
             this._operations.Add(new Operation()
             {
                 OperationType = OperationType.RemoveHash,
-                Arg = new RemoveHashArg() { Key = key }
+                Arg = JsonConvert.SerializeObject(new RemoveHashArg() { Key = key })
             });
         }
 
         public override void Commit()
         {
-            _services.TransactionAppService.CommitAsync(this._operations);
+            _services.TransactionAppService.CommitAsync(this._operations).GetAwaiter().GetResult();
         }
     }
 }

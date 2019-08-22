@@ -22,25 +22,25 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
             this._stateManager = stateManager;
             _dictName = dictName;
         }
-        public async Task<JobDto> GetJobAsync(string JobId)
+        public async Task<JobDto> GetJobAsync(string jobId)
         {
-            var job_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobDto>>(Consts.JOB_DICT);
+            var jobDict = await StoreFactory.CreateJobDictAsync(this._stateManager, this._dictName);
             using (var tx = this._stateManager.CreateTransaction())
             {
-                var job_condition = await job_dict.TryGetValueAsync(tx, JobId);
-                if (job_condition.HasValue)
-                    return job_condition.Value;
+                var jobCondition = await jobDict.TryGetValueAsync(tx, jobId);
+                if (jobCondition.HasValue)
+                    return jobCondition.Value;
                 return null;
             }
         }
 
         public async Task<List<JobDto>> GetJobsByStateNameAsync(string stateName)
         {
-            var job_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobDto>>(Consts.JOB_DICT);
+            var jobDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobDto>>(Consts.JOB_DICT);
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var ls = new List<JobDto>();
-                var enumlator = (await job_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+                var enumlator = (await jobDict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
                 while (await enumlator.MoveNextAsync(default))
                 {
                     if (enumlator.Current.Value.StateName == stateName)
@@ -53,14 +53,14 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
         public async Task<List<JobDto>> GetJobsByIdsAsync(string[] jobIds)
         {
             var result = new List<JobDto>();
-            var job_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobDto>>(Consts.JOB_DICT);
+            var jobDict = await StoreFactory.CreateJobDictAsync(this._stateManager, this._dictName);
             using (var tx = this._stateManager.CreateTransaction())
             {
                 foreach (var jobId in jobIds)
                 {
-                    var job_condition = await job_dict.TryGetValueAsync(tx, jobId);
-                    if (job_condition.HasValue)
-                        result.Add(job_condition.Value);
+                    var jobCondition = await jobDict.TryGetValueAsync(tx, jobId);
+                    if (jobCondition.HasValue)
+                        result.Add(jobCondition.Value);
                     else
                         result.Add(new JobDto() { Id = jobId });
                 }
@@ -71,10 +71,10 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
 
         public async Task<List<JobDto>> GetJobsAsync()
         {
-            var job_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobDto>>(Consts.JOB_DICT);
+            var jobDict = await StoreFactory.CreateJobDictAsync(this._stateManager, this._dictName);
             using (var tx = this._stateManager.CreateTransaction())
             {
-                var enumlator = (await job_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+                var enumlator = (await jobDict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
                 var ls = new List<JobDto>();
                 while (await enumlator.MoveNextAsync(default))
                 {
@@ -87,7 +87,7 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
         public async Task AddOrUpdateAsync(ITransaction tx, IReliableDictionary2<string, JobDto> jobDict, string key, Func<JobDto, JobDto> action)
         {
             var jobCondition = await jobDict.TryGetValueAsync(tx, key);
-            if (jobCondition.HasValue)
+            if (!jobCondition.HasValue)
             {
                 var job = action.Invoke(jobCondition.Value);
                 await jobDict.AddOrUpdateAsync(tx, key, job, (k, v) => job);

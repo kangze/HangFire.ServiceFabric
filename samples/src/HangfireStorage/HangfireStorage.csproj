@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\HangFireStorageService\Hangfire.ServiceFabric.csproj" />
+    <ProjectReference Include="..\..\..\src\Hangfire.ServiceFabric.StatefulService\Hangfire.ServiceFabric.StatefulService.csproj" />
   </ItemGroup>
 
 </Project>

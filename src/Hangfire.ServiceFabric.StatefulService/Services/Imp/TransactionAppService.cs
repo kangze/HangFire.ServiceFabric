@@ -56,7 +56,7 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
                     switch (operation.OperationType)
                     {
                         case OperationType.ExpireJob:
-                            var arg0 = operation.GetArguments<ExpireJobArg>(operation.Arg);
+                            var arg0 = operation.GetArguments<ExpireJobArg>();
                             await this._jobAppService.AddOrUpdateAsync(tx, this._jobDtoDict, arg0.JobId, job =>
                                 {
                                     job.ExpireAt = DateTime.UtcNow.Add(arg0.ExpireIn);
@@ -64,12 +64,12 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
                                 });
                             break;
                         case OperationType.CreateExpiredJob:
-                            var arg1 = operation.GetArguments<CreateExpiredJobArg>(operation.Arg);
+                            var arg1 = operation.GetArguments<CreateExpiredJobArg>();
                             await this._jobAppService.AddOrUpdateAsync(tx, this._jobDtoDict, arg1.JobDto.Id,
                                 job => arg1.JobDto);
                             break;
                         case OperationType.SetJobParameter:
-                            var arg2 = operation.GetArguments<SetJobParameterArg>(operation.Arg);
+                            var arg2 = operation.GetArguments<SetJobParameterArg>();
                             await this._jobAppService.AddOrUpdateAsync(tx, this._jobDtoDict, arg2.JobId, job =>
                             {
                                 job.Parameters.AddOrUpdate(arg2.Name, arg2.Value);
@@ -77,7 +77,7 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
                             });
                             break;
                         case OperationType.PersistJob:
-                            var arg3 = operation.GetArguments<PersistJobArg>(operation.Arg);
+                            var arg3 = operation.GetArguments<PersistJobArg>();
                             await this._jobAppService.AddOrUpdateAsync(tx, this._jobDtoDict, arg3.JobId, job =>
                             {
                                 job.ExpireAt = null;
@@ -85,7 +85,7 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
                             });
                             break;
                         case OperationType.SetJobState:
-                            var arg4 = operation.GetArguments<SetJobStateArg>(operation.Arg);
+                            var arg4 = operation.GetArguments<SetJobStateArg>();
                             await this._jobAppService.AddOrUpdateAsync(tx, this._jobDtoDict, arg4.JobId, job =>
                             {
                                 job.StateHistory.Add(arg4.StateDto);
@@ -94,7 +94,7 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
                             });
                             break;
                         case OperationType.AddJobState:
-                            var arg5 = operation.GetArguments<SetJobStateArg>(operation.Arg);
+                            var arg5 = operation.GetArguments<SetJobStateArg>();
                             await this._jobAppService.AddOrUpdateAsync(tx, this._jobDtoDict, arg5.JobId, job =>
                             {
                                 job.StateHistory.Add(arg5.StateDto);
@@ -102,12 +102,12 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
                             });
                             break;
                         case OperationType.AddToQueue:
-                            var arg6 = operation.GetArguments<AddToQueueArg>(operation.Arg);
+                            var arg6 = operation.GetArguments<AddToQueueArg>();
                             await this._jobQueueAppService.AddAsync(tx, this._jobQueueDict, arg6.Id, arg6.JobId, arg6.Queue);
                             break;
                         case OperationType.IncrementCounter:
                         case OperationType.DecrementCounter:
-                            var arg7 = operation.GetArguments<IncrementCounterArg>(operation.Arg);
+                            var arg7 = operation.GetArguments<IncrementCounterArg>();
                             await this._counterAppService.AddAsync(tx, this._counterDict, new CounterDto()
                             {
                                 Id = Guid.NewGuid().ToString("N"),
@@ -117,7 +117,7 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
                             });
                             break;
                         case OperationType.AddToSet:
-                            var arg8 = operation.GetArguments<AddToSetArg>(operation.Arg);
+                            var arg8 = operation.GetArguments<AddToSetArg>();
                             await this._setAppService.AddSetAsync(tx, this._setDict, new SetDto()
                             {
                                 Key = arg8.Key,
@@ -126,15 +126,15 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
                             });
                             break;
                         case OperationType.RemoveFromSet:
-                            var arg9 = operation.GetArguments<RemoveFromSetArg>(operation.Arg);
-                            await this._setAppService.AddSetAsync(tx, this._setDict, new SetDto()
+                            var arg9 = operation.GetArguments<RemoveFromSetArg>();
+                            await this._setAppService.RemoveAsync(tx, this._setDict, new SetDto()
                             {
                                 Key = arg9.Key,
                                 Value = arg9.Value,
                             });
                             break;
                         case OperationType.InsertToList:
-                            var arg10 = operation.GetArguments<InsertToListArg>(operation.Arg);
+                            var arg10 = operation.GetArguments<InsertToListArg>();
                             await this._listAppService.AddAsync(tx, this._listDict, new ListDto()
                             {
                                 Id = Guid.NewGuid().ToString("N"),
@@ -143,24 +143,24 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
                             });
                             break;
                         case OperationType.RemoveFromList:
-                            var arg11 = operation.GetArguments<RemoveFromListArg>(operation.Arg);
-                            await this._listAppService.AddAsync(tx, this._listDict, new ListDto()
+                            var arg11 = operation.GetArguments<RemoveFromListArg>();
+                            await this._listAppService.Remove(tx, this._listDict, new ListDto()
                             {
                                 Item = arg11.Key,
                                 Value = arg11.Value
                             });
                             break;
                         case OperationType.TrimList:
-                            var arg12 = operation.GetArguments<TrimListArg>(operation.Arg);
+                            var arg12 = operation.GetArguments<TrimListArg>();
                             await this._listAppService.RemoveRange(tx, this._listDict, arg12.Key, arg12.KeepStartingFrom, arg12.KeepEndingAt);
                             break;
                         case OperationType.SetRangeInHash:
-                            var arg13 = operation.GetArguments<SetRangInHashArg>(operation.Arg);
+                            var arg13 = operation.GetArguments<SetRangInHashArg>();
                             await this._hashAppService.SetRangInHash(tx, this._hashDict, arg13.Key,
                                 arg13.KeyValuePairs);
                             break;
                         case OperationType.RemoveHash:
-                            var arg14 = operation.GetArguments<RemoveHashArg>(operation.Arg);
+                            var arg14 = operation.GetArguments<RemoveHashArg>();
                             await this._hashAppService.RemoveAsync(tx, this._hashDict, arg14.Key);
                             break;
 

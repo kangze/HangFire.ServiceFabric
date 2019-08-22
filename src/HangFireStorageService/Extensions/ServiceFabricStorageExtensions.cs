@@ -9,7 +9,6 @@ using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Services.Communication.Runtime;
 using Microsoft.ServiceFabric.Services.Remoting.V2.FabricTransport.Runtime;
 using Hangfire.ServiceFabric.Internal;
-using Hangfire.ServiceFabric.StatefulService.Services.Imp;
 
 namespace Hangfire.ServiceFabric.Extensions
 {

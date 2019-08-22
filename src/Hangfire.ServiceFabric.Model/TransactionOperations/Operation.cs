@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Hangfire.ServiceFabric.Model.TransactionOperations
 {
@@ -13,14 +14,14 @@ namespace Hangfire.ServiceFabric.Model.TransactionOperations
         [DataMember]
         public OperationType OperationType { get; set; }
 
-        public T GetArguments<T>(object obj)
+        public T GetArguments<T>()
         where T : class
         {
-            return obj as T;
+            return JsonConvert.DeserializeObject<T>(this.Arg);
         }
 
         [DataMember]
-        public object Arg { get; set; }
+        public string Arg { get; set; }
     }
 
     public enum OperationType
