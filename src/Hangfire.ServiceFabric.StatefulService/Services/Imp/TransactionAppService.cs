@@ -94,7 +94,7 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
                             });
                             break;
                         case OperationType.AddJobState:
-                            var arg5 = operation.GetArguments<SetJobStateArg>();
+                            var arg5 = operation.GetArguments<AddJobStateArg>();
                             await this._jobAppService.AddOrUpdateAsync(tx, this._jobDtoDict, arg5.JobId, job =>
                             {
                                 job.StateHistory.Add(arg5.StateDto);

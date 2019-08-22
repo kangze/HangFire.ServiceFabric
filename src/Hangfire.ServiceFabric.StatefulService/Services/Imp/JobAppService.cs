@@ -87,11 +87,8 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
         public async Task AddOrUpdateAsync(ITransaction tx, IReliableDictionary2<string, JobDto> jobDict, string key, Func<JobDto, JobDto> action)
         {
             var jobCondition = await jobDict.TryGetValueAsync(tx, key);
-            if (!jobCondition.HasValue)
-            {
-                var job = action.Invoke(jobCondition.Value);
-                await jobDict.AddOrUpdateAsync(tx, key, job, (k, v) => job);
-            }
+            var job = action.Invoke(jobCondition.Value);
+            await jobDict.AddOrUpdateAsync(tx, key, job, (k, v) => job);
         }
     }
 }
