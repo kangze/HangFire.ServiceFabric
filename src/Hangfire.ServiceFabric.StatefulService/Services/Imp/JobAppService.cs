@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 using Hangfire.ServiceFabric.Extensions;
@@ -24,19 +25,27 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
         }
         public async Task<JobDto> GetJobAsync(string jobId)
         {
-            var jobDict = await StoreFactory.CreateJobDictAsync(this._stateManager, this._dictName);
-            using (var tx = this._stateManager.CreateTransaction())
+            try
             {
-                var jobCondition = await jobDict.TryGetValueAsync(tx, jobId);
-                if (jobCondition.HasValue)
-                    return jobCondition.Value;
+                var jobDict = await StoreFactory.CreateJobDictAsync(this._stateManager, this._dictName);
+                using (var tx = this._stateManager.CreateTransaction())
+                {
+                    var jobCondition = await jobDict.TryGetValueAsync(tx, jobId);
+                    if (jobCondition.HasValue)
+                        return jobCondition.Value;
+                    return null;
+                }
+            }
+            catch (Exception)
+            {
                 return null;
             }
+
         }
 
         public async Task<List<JobDto>> GetJobsByStateNameAsync(string stateName)
         {
-            var jobDict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobDto>>(Consts.JOB_DICT);
+            var jobDict = await StoreFactory.CreateJobDictAsync(this._stateManager, this._dictName);
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var ls = new List<JobDto>();

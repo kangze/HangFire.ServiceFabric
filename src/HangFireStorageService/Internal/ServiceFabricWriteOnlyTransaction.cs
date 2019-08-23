@@ -23,10 +23,13 @@ namespace Hangfire.ServiceFabric.Internal
     {
         private readonly IServiceFabriceStorageServices _services;
         private readonly List<Operation> _operations;
+        private readonly List<Action> _afterActions;
+        private readonly static AutoResetEvent NewTransactionEvent = new AutoResetEvent(true);
         public ServiceFabricWriteOnlyTransaction(IServiceFabriceStorageServices services)
         {
             this._services = services;
             this._operations = new List<Operation>();
+            this._afterActions = new List<Action>();
         }
 
         public override void ExpireJob(string jobId, TimeSpan expireIn)
@@ -157,8 +160,10 @@ namespace Hangfire.ServiceFabric.Internal
                     Queue = queue
                 })
             });
-
-            //   ServiceFabricStorageConnection.AutoResetNewEvent.Set();
+            _afterActions.Add(() =>
+            {
+                ServiceFabricStorageConnection.AutoResetNewEvent.Set();
+            });
         }
 
         public override void IncrementCounter(string key)
@@ -311,7 +316,22 @@ namespace Hangfire.ServiceFabric.Internal
 
         public override void Commit()
         {
-            _services.TransactionAppService.CommitAsync(this._operations).GetAwaiter().GetResult();
+            NewTransactionEvent.WaitOne();
+            try
+            {
+                _services.TransactionAppService.CommitAsync(this._operations).GetAwaiter().GetResult();
+                foreach (var afterAction in this._afterActions)
+                {
+                    afterAction.Invoke();
+                }
+                NewTransactionEvent.Set();
+            }
+            catch (Exception)
+            {
+                NewTransactionEvent.Set();
+                throw;
+            }
+
         }
     }
 }

@@ -105,8 +105,8 @@ namespace Hangfire.ServiceFabric.Internal
         {
 
             var stats = new StatisticsDto();
-            var all_job = this._services.JobAppService.GetJobsAsync().GetAwaiter().GetResult();
-            var countByStates = all_job
+            var allJob = this._services.JobAppService.GetJobsAsync().GetAwaiter().GetResult();
+            var countByStates = allJob
                 .Where(u => StatisticsStateNames.Contains(u.StateName))
                 .GroupBy(u => u.StateName)
                 .ToDictionary(u => u.Key, u => u.Count());
@@ -118,21 +118,21 @@ namespace Hangfire.ServiceFabric.Internal
             stats.Processing = GetCountIfExists(ProcessingState.StateName);
             stats.Scheduled = GetCountIfExists(ScheduledState.StateName);
 
-            var all_server = this._services.ServerAppService.GetAllServerAsync().GetAwaiter().GetResult();
-            stats.Servers = all_server.Count();
+            var allServer = this._services.ServerAppService.GetAllServerAsync().GetAwaiter().GetResult();
+            stats.Servers = allServer.Count();
 
-            var all_counter = this._services.CounterAppService.GetAllCounterAsync().GetAwaiter().GetResult();
+            var allCounter = this._services.CounterAppService.GetAllCounterAsync().GetAwaiter().GetResult();
 
             var statsSucceeded = $@"stats:{State.Succeeded}";
-            var successCounter = all_counter.FirstOrDefault(u => u.Key == statsSucceeded);
-            stats.Succeeded = successCounter?.Value ?? 0;
+            var successCounter = allCounter.Where(u => u.Key == statsSucceeded).ToList();
+            stats.Succeeded = successCounter.Sum(u => u.Value);
 
             var statsDeleted = $@"stats:{State.Deleted}";
-            var deletedCounter = all_counter.FirstOrDefault(u => u.Key == statsDeleted);
-            stats.Deleted = deletedCounter?.Value ?? 0;
+            var deletedCounter = allCounter.Where(u => u.Key == statsDeleted).ToList();
+            stats.Deleted = deletedCounter.Sum(u => u.Value);
 
-            var all_sets = this._services.JobSetAppService.GetSetsAsync().GetAwaiter().GetResult();
-            stats.Recurring = all_sets.Count(u => u.Key.Contains("recurring-jobs"));
+            var allSets = this._services.JobSetAppService.GetSetsAsync().GetAwaiter().GetResult();
+            stats.Recurring = allSets.Count(u => u.Key.Contains("recurring-jobs"));
 
             var queues = this._services.JobQueueAppService.GetQueuesAsync(null).GetAwaiter().GetResult();
             stats.Queues = queues.Count;

@@ -53,13 +53,41 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
             {
                 foreach (var operation in operations)
                 {
+                    if (operation.OperationType == OperationType.ExpireJob ||
+                        operation.OperationType == OperationType.SetJobParameter ||
+                        operation.OperationType == OperationType.PersistJob ||
+                        operation.OperationType == OperationType.SetJobState ||
+                        operation.OperationType == OperationType.AddJobState
+                    )
+                    {
+                    }
                     switch (operation.OperationType)
                     {
                         case OperationType.ExpireJob:
+                        case OperationType.SetJobParameter:
+                        case OperationType.PersistJob:
+                        case OperationType.SetJobState:
+                        case OperationType.AddJobState:
                             var arg0 = operation.GetArguments<ExpireJobArg>();
-                            await this._jobAppService.AddOrUpdateAsync(tx, this._jobDtoDict, arg0.JobId, job =>
+                            var arg2 = operation.GetArguments<SetJobParameterArg>();
+                            var arg3 = operation.GetArguments<PersistJobArg>();
+                            var arg4 = operation.GetArguments<SetJobStateArg>();
+                            var arg5 = operation.GetArguments<AddJobStateArg>();
+                            var jobId = string.Empty;
+                            if (arg0 != null)
+                                jobId = arg0.JobId;
+                            else if (arg2 != null)
+                                jobId = arg2.JobId;
+                            else if (arg3 != null)
+                                jobId = arg3.JobId;
+                            else if (arg4 != null)
+                                jobId = arg4.JobId;
+                            else if (arg5 != null)
+                                jobId = arg5.JobId;
+                            await this._jobAppService.AddOrUpdateAsync(tx, this._jobDtoDict, jobId,
+                                job =>
                                 {
-                                    job.ExpireAt = DateTime.UtcNow.Add(arg0.ExpireIn);
+                                    UpdateJob(job, operation);
                                     return job;
                                 });
                             break;
@@ -67,39 +95,6 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
                             var arg1 = operation.GetArguments<CreateExpiredJobArg>();
                             await this._jobAppService.AddOrUpdateAsync(tx, this._jobDtoDict, arg1.JobDto.Id,
                                 job => arg1.JobDto);
-                            break;
-                        case OperationType.SetJobParameter:
-                            var arg2 = operation.GetArguments<SetJobParameterArg>();
-                            await this._jobAppService.AddOrUpdateAsync(tx, this._jobDtoDict, arg2.JobId, job =>
-                            {
-                                job.Parameters.AddOrUpdate(arg2.Name, arg2.Value);
-                                return job;
-                            });
-                            break;
-                        case OperationType.PersistJob:
-                            var arg3 = operation.GetArguments<PersistJobArg>();
-                            await this._jobAppService.AddOrUpdateAsync(tx, this._jobDtoDict, arg3.JobId, job =>
-                            {
-                                job.ExpireAt = null;
-                                return job;
-                            });
-                            break;
-                        case OperationType.SetJobState:
-                            var arg4 = operation.GetArguments<SetJobStateArg>();
-                            await this._jobAppService.AddOrUpdateAsync(tx, this._jobDtoDict, arg4.JobId, job =>
-                            {
-                                job.StateHistory.Add(arg4.StateDto);
-                                job.StateName = arg4.StateDto.Name;
-                                return job;
-                            });
-                            break;
-                        case OperationType.AddJobState:
-                            var arg5 = operation.GetArguments<AddJobStateArg>();
-                            await this._jobAppService.AddOrUpdateAsync(tx, this._jobDtoDict, arg5.JobId, job =>
-                            {
-                                job.StateHistory.Add(arg5.StateDto);
-                                return job;
-                            });
                             break;
                         case OperationType.AddToQueue:
                             var arg6 = operation.GetArguments<AddToQueueArg>();
@@ -167,9 +162,46 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
                     }
                 }
 
-                await tx.CommitAsync();
+                try
+                {
+                    await tx.CommitAsync();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
+
             }
 
+        }
+
+        private void UpdateJob(JobDto job, Operation operation)
+        {
+            switch (operation.OperationType)
+            {
+                case OperationType.ExpireJob:
+                    var arg0 = operation.GetArguments<ExpireJobArg>();
+                    job.ExpireAt = DateTime.UtcNow.Add(arg0.ExpireIn);
+                    break;
+                case OperationType.SetJobParameter:
+                    var arg2 = operation.GetArguments<SetJobParameterArg>();
+                    job.Parameters.AddOrUpdate(arg2.Name, arg2.Value);
+                    break;
+                case OperationType.PersistJob:
+                    var arg3 = operation.GetArguments<PersistJobArg>();
+                    job.ExpireAt = null;
+                    break;
+                case OperationType.SetJobState:
+                    var arg4 = operation.GetArguments<SetJobStateArg>();
+                    job.StateHistory.Add(arg4.StateDto);
+                    job.StateName = arg4.StateDto.Name;
+                    break;
+                case OperationType.AddJobState:
+                    var arg5 = operation.GetArguments<AddJobStateArg>();
+                    job.StateHistory.Add(arg5.StateDto);
+                    break;
+            }
         }
 
         private async Task InitDataStoresAsync()

@@ -25,7 +25,7 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
 
         public async Task AddToQueueJObAsync(string queue, string jobId)
         {
-            var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobQueueDto>>(Consts.JOBQUEUE_DICT);
+            var queuesDict = await StoreFactory.CreateJobQueueDictAsync(this._stateManager, this._dictName);
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var dto = new JobQueueDto()
@@ -34,17 +34,17 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
                     Queue = queue,
                     JobId = jobId
                 };
-                await queues_dict.SetAsync(tx, dto.Id, dto);
+                await queuesDict.SetAsync(tx, dto.Id, dto);
                 await tx.CommitAsync();
             }
         }
 
         public async Task<List<JobQueueDto>> GetQueuesAsync(string queue)
         {
-            var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobQueueDto>>(Consts.JOBQUEUE_DICT);
+            var queuesDict = await StoreFactory.CreateJobQueueDictAsync(this._stateManager, this._dictName);
             using (var tx = this._stateManager.CreateTransaction())
             {
-                var enumerator = (await queues_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+                var enumerator = (await queuesDict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
                 var ls = new List<JobQueueDto>();
                 while (await enumerator.MoveNextAsync(default))
                 {
@@ -88,32 +88,32 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
 
         public async Task<JobQueueDto> GetQueueAsync(string id)
         {
-            var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobQueueDto>>(Consts.JOBQUEUE_DICT);
+            var queuesDict = await StoreFactory.CreateJobQueueDictAsync(this._stateManager, this._dictName);
             using (var tx = this._stateManager.CreateTransaction())
             {
-                var condition_value = await queues_dict.TryGetValueAsync(tx, id);
-                if (condition_value.HasValue)
-                    return condition_value.Value;
+                var queueCondition = await queuesDict.TryGetValueAsync(tx, id);
+                if (queueCondition.HasValue)
+                    return queueCondition.Value;
                 return null;
             }
         }
 
         public async Task DeleteQueueJobAsync(string id)
         {
-            var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobQueueDto>>(Consts.JOBQUEUE_DICT);
+            var queuesDict = await StoreFactory.CreateJobQueueDictAsync(this._stateManager, this._dictName);
             using (var tx = this._stateManager.CreateTransaction())
             {
-                await queues_dict.TryRemoveAsync(tx, id);
+                await queuesDict.TryRemoveAsync(tx, id);
                 await tx.CommitAsync();
             }
         }
 
         public async Task UpdateQueueAsync(JobQueueDto dto)
         {
-            var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobQueueDto>>(Consts.JOBQUEUE_DICT);
+            var queuesDict = await StoreFactory.CreateJobQueueDictAsync(this._stateManager, this._dictName);
             using (var tx = this._stateManager.CreateTransaction())
             {
-                await queues_dict.SetAsync(tx, dto.Id, dto);
+                await queuesDict.SetAsync(tx, dto.Id, dto);
                 await tx.CommitAsync();
             }
 
@@ -121,10 +121,10 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
 
         public async Task<JobQueueDto> GetFetchedJobAsync(string queue)
         {
-            var queues_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, JobQueueDto>>(Consts.JOBQUEUE_DICT);
+            var queuesDict = await StoreFactory.CreateJobQueueDictAsync(this._stateManager, this._dictName);
             using (var tx = this._stateManager.CreateTransaction())
             {
-                var enumerator = (await queues_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+                var enumerator = (await queuesDict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
                 while (await enumerator.MoveNextAsync(default))
                 {
                     if (!string.IsNullOrEmpty(queue) && enumerator.Current.Value.Queue == queue && enumerator.Current.Value.FetchedAt == null)
@@ -134,7 +134,7 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
             }
         }
 
-        public async Task AddAsync(ITransaction tx, IReliableDictionary2<string,JobQueueDto> jobQueueDict, string id, string jobId, string queue)
+        public async Task AddAsync(ITransaction tx, IReliableDictionary2<string, JobQueueDto> jobQueueDict, string id, string jobId, string queue)
         {
             var dto = new JobQueueDto()
             {

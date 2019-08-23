@@ -30,16 +30,16 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
             if (string.IsNullOrEmpty(data))
                 throw new ArgumentNullException(nameof(data));
 
-            var server_dict = await GetServerDtosDictAsync();
+            var serverDict = await StoreFactory.CreateServerDictAsync(this._stateManager, this._dictName);
 
             using (var tx = this._stateManager.CreateTransaction())
             {
-                var existed_condition = await server_dict.TryGetValueAsync(tx, serverId);
-                if (existed_condition.HasValue)
+                var existedCondition = await serverDict.TryGetValueAsync(tx, serverId);
+                if (existedCondition.HasValue)
                 {
-                    existed_condition.Value.Data = data;
-                    existed_condition.Value.LastHeartbeat = heartBeat;
-                    await server_dict.AddOrUpdateAsync(tx, serverId, existed_condition.Value, (k, v) => existed_condition.Value);
+                    existedCondition.Value.Data = data;
+                    existedCondition.Value.LastHeartbeat = heartBeat;
+                    await serverDict.AddOrUpdateAsync(tx, serverId, existedCondition.Value, (k, v) => existedCondition.Value);
                 }
                 else
                 {
@@ -49,7 +49,7 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
                         ServerId = serverId,
                         LastHeartbeat = heartBeat
                     };
-                    await server_dict.TryAddAsync(tx, serverId, serverDto);
+                    await serverDict.TryAddAsync(tx, serverId, serverDto);
                 }
 
                 await tx.CommitAsync();
@@ -60,11 +60,11 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
 
         public async Task<List<ServerDtos>> GetAllServerAsync()
         {
-            var server_dict = await GetServerDtosDictAsync();
+            var serverDict = await StoreFactory.CreateServerDictAsync(this._stateManager, this._dictName);
             using (var tx = this._stateManager.CreateTransaction())
             {
                 var ls = new List<ServerDtos>();
-                var enumerator = (await server_dict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+                var enumerator = (await serverDict.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
                 while (await enumerator.MoveNextAsync(default))
                 {
                     ls.Add(enumerator.Current.Value);
@@ -78,11 +78,11 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
             if (string.IsNullOrEmpty(serverId))
                 throw new ArgumentNullException(nameof(serverId));
 
-            var server_dict = await GetServerDtosDictAsync();
+            var serverDict = await StoreFactory.CreateServerDictAsync(this._stateManager, this._dictName);
             using (var tx = this._stateManager.CreateTransaction())
             {
-                var server_condition = await server_dict.TryGetValueAsync(tx, serverId);
-                return server_condition.HasValue ? server_condition.Value : null;
+                var serverCondition = await serverDict.TryGetValueAsync(tx, serverId);
+                return serverCondition.HasValue ? serverCondition.Value : null;
             }
         }
 
@@ -90,18 +90,12 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
         {
             if (string.IsNullOrEmpty(serverId))
                 throw new ArgumentNullException(nameof(serverId));
-            var server_dict = await GetServerDtosDictAsync();
+            var serverDict = await StoreFactory.CreateServerDictAsync(this._stateManager, this._dictName);
             using (var tx = this._stateManager.CreateTransaction())
             {
-                await server_dict.TryRemoveAsync(tx, serverId);
+                await serverDict.TryRemoveAsync(tx, serverId);
                 await tx.CommitAsync();
             }
-        }
-
-        private async Task<IReliableDictionary2<string, ServerDtos>> GetServerDtosDictAsync()
-        {
-            var server_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, ServerDtos>>(Consts.SERVER_DICT);
-            return server_dict;
         }
     }
 }

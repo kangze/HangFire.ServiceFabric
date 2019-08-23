@@ -39,5 +39,15 @@ namespace Hangfire.ServiceFabric.StatefulService
         {
             return await stateManager.GetOrAddAsync<IReliableDictionary2<string, HashDto>>(dictName);
         }
+
+        public static async Task<IReliableDictionary2<string, int>> CreateResourceLockDictAsync(IReliableStateManager stateManager, string dictName)
+        {
+            return await stateManager.GetOrAddAsync<IReliableDictionary2<string, int>>(dictName);
+        }
+
+        public static async Task<IReliableDictionary2<string, ServerDtos>> CreateServerDictAsync(IReliableStateManager stateManager, string dictName)
+        {
+            return await stateManager.GetOrAddAsync<IReliableDictionary2<string, ServerDtos>>(dictName);
+        }
     }
 }

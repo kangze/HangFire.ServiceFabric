@@ -25,14 +25,14 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
 
         public async Task<bool> LockAsync(string resource)
         {
-            var lock_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, int>>(Consts.LOCK_DICT);
+            var lockDict = await StoreFactory.CreateResourceLockDictAsync(this._stateManager, this._dictName);
             using (var tx = this._stateManager.CreateTransaction())
             {
-                var lock_condition = await lock_dict.TryGetValueAsync(tx, resource);
-                if (lock_condition.HasValue) return false;
+                var lockCondition = await lockDict.TryGetValueAsync(tx, resource);
+                if (lockCondition.HasValue) return false;
                 try
                 {
-                    await lock_dict.SetAsync(tx, resource, 0);
+                    await lockDict.SetAsync(tx, resource, 0);
                     await tx.CommitAsync();
                     return true;
                 }
@@ -46,13 +46,13 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
 
         public async Task<bool> ReleaseAsync(string resource)
         {
-            var lock_dict = await this._stateManager.GetOrAddAsync<IReliableDictionary2<string, int>>(Consts.LOCK_DICT);
+            var lockDict = await StoreFactory.CreateResourceLockDictAsync(this._stateManager, this._dictName);
             using (var tx = this._stateManager.CreateTransaction())
             {
-                var lock_condition = await lock_dict.TryGetValueAsync(tx, resource);
-                if (!lock_condition.HasValue)
+                var lockCondition = await lockDict.TryGetValueAsync(tx, resource);
+                if (!lockCondition.HasValue)
                     return true;
-                await lock_dict.TryRemoveAsync(tx, resource);
+                await lockDict.TryRemoveAsync(tx, resource);
                 await tx.CommitAsync();
                 return true;
             }
