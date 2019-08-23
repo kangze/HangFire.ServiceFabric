@@ -3,12 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Hangfire.ServiceFabric.Model.Dtos;
 
 namespace Hangfire.ServiceFabric.Model.TransactionOperations.Arguments
 {
-    public class SetJobStateArg : JobArg
+    public abstract class TransactionArg
     {
-        public StateDto StateDto { get; set; }
+
+    }
+
+    public class JobArg
+    {
+        public string JobId { get; set; }
     }
 }

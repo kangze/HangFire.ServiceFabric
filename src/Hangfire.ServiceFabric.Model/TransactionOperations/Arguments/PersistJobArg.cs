@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 
 namespace Hangfire.ServiceFabric.Model.TransactionOperations.Arguments
 {
-    public class PersistJobArg
+    public class PersistJobArg : JobArg
     {
-        public string JobId { get; set; }
     }
 }

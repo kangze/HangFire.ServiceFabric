@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace Hangfire.ServiceFabric.Model.TransactionOperations.Arguments
 {
-    public class SetJobParameterArg
+    public class SetJobParameterArg: JobArg
     {
-        public string JobId { get; set; }
-
         public string Name { get; set; }
 
         public string Value { get; set; }

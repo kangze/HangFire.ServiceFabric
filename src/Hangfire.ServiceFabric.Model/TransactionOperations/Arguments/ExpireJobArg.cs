@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace Hangfire.ServiceFabric.Model.TransactionOperations.Arguments
 {
-    public class ExpireJobArg
+    public class ExpireJobArg: JobArg
     {
-        public string JobId { get; set; }
 
         public TimeSpan ExpireIn { get; set; }
     }

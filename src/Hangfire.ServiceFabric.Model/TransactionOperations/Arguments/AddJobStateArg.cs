@@ -7,9 +7,8 @@ using Hangfire.ServiceFabric.Model.Dtos;
 
 namespace Hangfire.ServiceFabric.Model.TransactionOperations.Arguments
 {
-    public class AddJobStateArg
+    public class AddJobStateArg : JobArg
     {
-        public string JobId { get; set; }
 
         public StateDto StateDto { get; set; }
     }

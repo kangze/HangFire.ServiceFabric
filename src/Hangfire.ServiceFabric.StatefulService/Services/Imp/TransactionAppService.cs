@@ -53,14 +53,6 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
             {
                 foreach (var operation in operations)
                 {
-                    if (operation.OperationType == OperationType.ExpireJob ||
-                        operation.OperationType == OperationType.SetJobParameter ||
-                        operation.OperationType == OperationType.PersistJob ||
-                        operation.OperationType == OperationType.SetJobState ||
-                        operation.OperationType == OperationType.AddJobState
-                    )
-                    {
-                    }
                     switch (operation.OperationType)
                     {
                         case OperationType.ExpireJob:
@@ -68,23 +60,8 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
                         case OperationType.PersistJob:
                         case OperationType.SetJobState:
                         case OperationType.AddJobState:
-                            var arg0 = operation.GetArguments<ExpireJobArg>();
-                            var arg2 = operation.GetArguments<SetJobParameterArg>();
-                            var arg3 = operation.GetArguments<PersistJobArg>();
-                            var arg4 = operation.GetArguments<SetJobStateArg>();
-                            var arg5 = operation.GetArguments<AddJobStateArg>();
-                            var jobId = string.Empty;
-                            if (arg0 != null)
-                                jobId = arg0.JobId;
-                            else if (arg2 != null)
-                                jobId = arg2.JobId;
-                            else if (arg3 != null)
-                                jobId = arg3.JobId;
-                            else if (arg4 != null)
-                                jobId = arg4.JobId;
-                            else if (arg5 != null)
-                                jobId = arg5.JobId;
-                            await this._jobAppService.AddOrUpdateAsync(tx, this._jobDtoDict, jobId,
+                            var arg = operation.GetArguments<JobArg>();
+                            await this._jobAppService.AddOrUpdateAsync(tx, this._jobDtoDict, arg.JobId,
                                 job =>
                                 {
                                     UpdateJob(job, operation);
