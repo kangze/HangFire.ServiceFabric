@@ -11,7 +11,6 @@ using Hangfire.ServiceFabric.Model.Interfaces;
 using Microsoft.ServiceFabric.Services.Client;
 using Microsoft.ServiceFabric.Services.Remoting.Client;
 using Microsoft.ServiceFabric.Services.Remoting.V2.FabricTransport.Client;
-using Hangfire.ServiceFabric.StatefulService;
 
 namespace Hangfire.ServiceFabric.Extensions
 {

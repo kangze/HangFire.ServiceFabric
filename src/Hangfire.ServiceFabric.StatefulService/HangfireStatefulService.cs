@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using Hangfire.ServiceFabric.StatefulService.Services.Imp;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Services.Remoting.V2.FabricTransport.Runtime;
-using Microsoft.VisualBasic;
+using Hangfire.ServiceFabric.Model;
 
 namespace Hangfire.ServiceFabric.StatefulService
 {
@@ -64,7 +64,7 @@ namespace Hangfire.ServiceFabric.StatefulService
                 new ServiceReplicaListener((c) =>
                     new FabricTransportServiceRemotingListener(c, new TransactionAppService(stateManager,dictNames)) , Constants.ListenerNames_TransactionAppService)
             };
-            
+
         }
     }
 }
