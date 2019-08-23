@@ -60,12 +60,17 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
 
         public async Task SetRangInHash(ITransaction tx, IReliableDictionary2<string, HashDto> dict, string key, IEnumerable<KeyValuePair<string, string>> keyValuePairs)
         {
-            var hashDto = await dict.TryGetValueAsync(tx, key);
-            if (!hashDto.HasValue)
-                return;
+            var hashCondition = await dict.TryGetValueAsync(tx, key);
+            HashDto hashDto = null;
+            hashDto = !hashCondition.HasValue ? new HashDto()
+            {
+                Key = key,
+                Id = Guid.NewGuid().ToString("N"),
+                Fields = new Dictionary<string, string>()
+            } : hashCondition.Value;
             foreach (var pair in keyValuePairs)
-                hashDto.Value.Fields.AddOrUpdate(pair.Key, pair.Value);
-            await dict.AddOrUpdateAsync(tx, key, hashDto.Value, (k, v) => hashDto.Value);
+                hashDto.Fields.AddOrUpdate(pair.Key, pair.Value);
+            await dict.AddOrUpdateAsync(tx, key, hashDto, (k, v) => hashDto);
         }
     }
 }

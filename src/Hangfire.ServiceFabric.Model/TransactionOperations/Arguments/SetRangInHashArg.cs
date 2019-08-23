@@ -10,6 +10,6 @@ namespace Hangfire.ServiceFabric.Model.TransactionOperations.Arguments
     {
         public string Key { get; set; }
 
-        public IEnumerable<KeyValuePair<string, string>> KeyValuePairs { get; set; }
+        public Dictionary<string, string> KeyValuePairs { get; set; }
     }
 }

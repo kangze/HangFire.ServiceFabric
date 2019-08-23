@@ -18,10 +18,10 @@ namespace SampleAspNetCore.Pages
                 );
 
             ////延迟任务执行
-            //var jobId2 = BackgroundJob.Schedule(() => System.Diagnostics.Debug.WriteLine("Delayed!"), TimeSpan.FromMinutes(2));
+            var jobId2 = BackgroundJob.Schedule(() => Console.WriteLine("Delayed!"), TimeSpan.FromMinutes(2));
 
             ////定时任务执行
-            //RecurringJob.AddOrUpdate(() => System.Diagnostics.Debug.WriteLine("Recurring!"), Cron.Minutely);
+            RecurringJob.AddOrUpdate(() => Console.WriteLine("Recurring!"), Cron.Minutely);
 
             ////延续性任务执行,延续job1
             var s = BackgroundJob.ContinueJobWith(jobId, () => Console.WriteLine("Continuation!"));

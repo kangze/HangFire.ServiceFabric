@@ -300,7 +300,7 @@ namespace Hangfire.ServiceFabric.Internal
                 Arg = JsonConvert.SerializeObject(new SetRangInHashArg()
                 {
                     Key = key,
-                    KeyValuePairs = keyValuePairs
+                    KeyValuePairs = keyValuePairs.ToDictionary(x => x.Key, y => y.Value)
                 })
             });
         }
