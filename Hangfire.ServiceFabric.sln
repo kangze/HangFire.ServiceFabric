@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28803.452
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hangfire.ServiceFabric", "src\HangFireStorageService\Hangfire.ServiceFabric.csproj", "{C4BD3C69-F6F8-4A09-BCA2-8B39B883B956}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hangfire.ServiceFabric", "src\Hangfire.ServiceFabric\Hangfire.ServiceFabric.csproj", "{C4BD3C69-F6F8-4A09-BCA2-8B39B883B956}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{0BBF1D7A-D1B3-40EC-A19E-41F25445AA14}"
 EndProject
 Project("{A07B5EB6-E848-4116-A8D0-A826331D98C6}") = "HangfireServiceFabricSfApp", "samples\HangfireServiceFabricSfApp\HangfireServiceFabricSfApp.sfproj", "{78DD4571-E866-432C-B96B-40AB020D48DF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HangfireStorage", "samples\src\HangfireStorage\HangfireStorage.csproj", "{1A5E29EC-31CE-4593-8177-C3D74BE51F2B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HangfireStorage","samples\src\HangfireStorage\HangfireStorage.csproj", "{1A5E29EC-31CE-4593-8177-C3D74BE51F2B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleAspNetCore", "samples\src\SampleAspNetCore\SampleAspNetCore.csproj", "{7CB240D8-C765-4723-BC81-0F137C114FD2}"
 EndProject

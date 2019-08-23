@@ -1,11 +1,21 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
+    <RootNamespace>Hangfire.ServiceFabric</RootNamespace>
+    <AssemblyName>Hangfire.ServiceFabric</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Hangfire.Core" Version="1.7.2" />
+    <PackageReference Include="Hangfire.Core" Version="1.7.3" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
+    <PackageReference Include="Microsoft.ServiceFabric.Services" Version="3.3.654" />
+    <PackageReference Include="Microsoft.ServiceFabric.Services.Remoting" Version="3.3.654" />
+    <PackageReference Include="ServiceFabric.Contrib.Common" Version="1.0.27" />
+    <PackageReference Include="Z.ExtensionMethods" Version="2.1.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Hangfire.ServiceFabric.Model\Hangfire.ServiceFabric.Model.csproj" />
+  </ItemGroup>
 </Project>
