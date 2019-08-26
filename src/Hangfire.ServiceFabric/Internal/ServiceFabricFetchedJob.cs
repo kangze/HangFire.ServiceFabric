@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Hangfire.Common;
 using Hangfire.ServiceFabric.Model.Interfaces;
 using Hangfire.Storage;
-using HangFireStorageService.Dto;
 
 namespace Hangfire.ServiceFabric.Internal
 {

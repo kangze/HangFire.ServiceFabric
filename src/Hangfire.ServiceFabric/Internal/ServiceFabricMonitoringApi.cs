@@ -3,17 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Hangfire.Common;
-using Hangfire.ServiceFabric.Dtos;
+using Hangfire.Common; 
 using Hangfire.ServiceFabric.Dtos.Internal;
-using Hangfire.ServiceFabric.Entities;
-using Hangfire.ServiceFabric.Internal;
 using Hangfire.ServiceFabric.Model;
 using Hangfire.ServiceFabric.Model.Dtos;
 using Hangfire.States;
 using Hangfire.Storage;
 using Hangfire.Storage.Monitoring;
-using HangFireStorageService.Dto;
 
 namespace Hangfire.ServiceFabric.Internal
 {

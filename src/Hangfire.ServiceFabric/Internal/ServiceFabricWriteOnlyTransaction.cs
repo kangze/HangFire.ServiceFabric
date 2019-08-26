@@ -14,7 +14,6 @@ using Hangfire.ServiceFabric.Model.TransactionOperations;
 using Hangfire.ServiceFabric.Model.TransactionOperations.Arguments;
 using Hangfire.States;
 using Hangfire.Storage;
-using HangFireStorageService.Dto;
 using Newtonsoft.Json;
 
 namespace Hangfire.ServiceFabric.Internal
