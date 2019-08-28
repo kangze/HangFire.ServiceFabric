@@ -27,17 +27,17 @@ namespace Hangfire.ServiceFabric.StatefulService.Services.Imp
         public string LockDictName { get; }
 
 
-        public DictNames(string prefix)
+        public DictNames()
         {
-            this.JobDictName = string.Format(Consts.JOB_DICT, prefix);
-            this.ServerDictName = string.Format(Consts.SERVER_DICT, prefix);
-            this.SetDictName = string.Format(Consts.SET_DICT, prefix);
-            this.HashDictName = string.Format(Consts.HASH_DICT, prefix);
-            this.JobQueueDictName = string.Format(Consts.JOBQUEUE_DICT, prefix);
-            this.AggregatdcounterDictName = string.Format(Consts.AGGREGATEDCOUNTER, prefix);
-            this.CounterDictName = string.Format(Consts.COUNTER, prefix);
-            this.ListDictName = string.Format(Consts.LIST_DICT, prefix);
-            this.LockDictName = string.Format(Consts.LOCK_DICT, prefix);
+            this.JobDictName = Consts.JOB_DICT;
+            this.ServerDictName = Consts.SERVER_DICT;
+            this.SetDictName = Consts.SET_DICT;
+            this.HashDictName = Consts.HASH_DICT;
+            this.JobQueueDictName = Consts.JOBQUEUE_DICT;
+            this.AggregatdcounterDictName = Consts.AGGREGATEDCOUNTER;
+            this.CounterDictName = Consts.COUNTER;
+            this.ListDictName = Consts.LIST_DICT;
+            this.LockDictName = Consts.LOCK_DICT;
         }
     }
 

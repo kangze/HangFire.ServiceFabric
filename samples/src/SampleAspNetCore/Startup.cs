@@ -32,7 +32,7 @@ namespace SampleAspNetCore
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
-            services.AddHangfire(x => x.UseServiceFabric("fabric:/HangfireServiceFabricSfApp/HangfireStorage"));
+            services.AddHangfire(x => x.UseServiceFabric("fabric:/HangfireServiceFabricSfApp/HangfireStorage", "Default"));
             services.AddHangfireServer();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }

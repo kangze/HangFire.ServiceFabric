@@ -18,7 +18,7 @@ namespace HangfireStorage
     internal sealed class HangfireStorage : HangfireStatefulService
     {
         public HangfireStorage(StatefulServiceContext context)
-            : base(context, "good")
+            : base(context)
         { }
 
 

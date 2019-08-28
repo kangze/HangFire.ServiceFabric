@@ -22,11 +22,13 @@ namespace Hangfire.ServiceFabric.Extensions
         private static readonly ServiceProxyFactory ProxyFactory = new ServiceProxyFactory((c) =>
            new FabricTransportServiceRemotingClientFactory());
 
-        private Uri _applicationUri;
+        private readonly Uri _applicationUri;
+        private readonly string _partitionKey;
 
-        public RemotingClient(string applicationUri)
+        public RemotingClient(string applicationUri, string partitionKey)
         {
             this._applicationUri = new Uri(applicationUri);
+            this._partitionKey = partitionKey;
         }
 
 
@@ -34,53 +36,53 @@ namespace Hangfire.ServiceFabric.Extensions
 
         public IJobAppService CreateJobAppService()
         {
-            return ProxyFactory.CreateServiceProxy<IJobAppService>(_applicationUri, listenerName: Constants.ListenerNames_JobAppService);
+            return ProxyFactory.CreateServiceProxy<IJobAppService>(_applicationUri,new ServicePartitionKey(this._partitionKey), listenerName: Constants.ListenerNames_JobAppService);
         }
 
         public IJobQueueAppService CreateJobQueueAppService()
         {
-            var services = ProxyFactory.CreateServiceProxy<IJobQueueAppService>(_applicationUri, listenerName: Constants.ListenerNames_JobQueueAppService);
+            var services = ProxyFactory.CreateServiceProxy<IJobQueueAppService>(_applicationUri, new ServicePartitionKey(this._partitionKey), listenerName: Constants.ListenerNames_JobQueueAppService);
             return services;
         }
 
 
         public IServerAppService CreateServiceAppService()
         {
-            return ProxyFactory.CreateServiceProxy<IServerAppService>(_applicationUri, listenerName: Constants.ListenerNames_ServerAppService);
+            return ProxyFactory.CreateServiceProxy<IServerAppService>(_applicationUri, new ServicePartitionKey(this._partitionKey), listenerName: Constants.ListenerNames_ServerAppService);
         }
 
         public IAggregatedCounterAppService CreateAggregateCounterAppService()
         {
-            return ProxyFactory.CreateServiceProxy<IAggregatedCounterAppService>(_applicationUri, listenerName: Constants.ListenerNames_AggregatedCounterAppService);
+            return ProxyFactory.CreateServiceProxy<IAggregatedCounterAppService>(_applicationUri, new ServicePartitionKey(this._partitionKey), listenerName: Constants.ListenerNames_AggregatedCounterAppService);
         }
 
         public ICounterAppService CreateCounterAppService()
         {
-            return ProxyFactory.CreateServiceProxy<ICounterAppService>(_applicationUri, listenerName: Constants.ListenerNames_CounterAppService);
+            return ProxyFactory.CreateServiceProxy<ICounterAppService>(_applicationUri, new ServicePartitionKey(this._partitionKey), listenerName: Constants.ListenerNames_CounterAppService);
         }
 
         public IJobSetAppService CreateJobSetAppService()
         {
-            return ProxyFactory.CreateServiceProxy<IJobSetAppService>(_applicationUri, listenerName: Constants.ListenerNames_JobSetAppService);
+            return ProxyFactory.CreateServiceProxy<IJobSetAppService>(_applicationUri, new ServicePartitionKey(this._partitionKey), listenerName: Constants.ListenerNames_JobSetAppService);
         }
 
         public IHashAppService CreateHashAppService()
         {
-            return ProxyFactory.CreateServiceProxy<IHashAppService>(_applicationUri, listenerName: Constants.ListenerNames_HashAppService);
+            return ProxyFactory.CreateServiceProxy<IHashAppService>(_applicationUri, new ServicePartitionKey(this._partitionKey), listenerName: Constants.ListenerNames_HashAppService);
         }
 
         public IListAppService CreateJobListAppService()
         {
-            return ProxyFactory.CreateServiceProxy<IListAppService>(_applicationUri, listenerName: Constants.ListenerNames_jobListAppSerivce);
+            return ProxyFactory.CreateServiceProxy<IListAppService>(_applicationUri, new ServicePartitionKey(this._partitionKey), listenerName: Constants.ListenerNames_jobListAppSerivce);
         }
         public IResourceLockAppService CreateResourceLockAppService()
         {
-            return ProxyFactory.CreateServiceProxy<IResourceLockAppService>(_applicationUri, listenerName: Constants.ListenerNames_ResourceLockAppService);
+            return ProxyFactory.CreateServiceProxy<IResourceLockAppService>(_applicationUri, new ServicePartitionKey(this._partitionKey), listenerName: Constants.ListenerNames_ResourceLockAppService);
         }
 
         public ITransactionAppService CreateTransactionAppService()
         {
-            return ProxyFactory.CreateServiceProxy<ITransactionAppService>(_applicationUri, listenerName: Constants.ListenerNames_TransactionAppService);
+            return ProxyFactory.CreateServiceProxy<ITransactionAppService>(_applicationUri, new ServicePartitionKey(this._partitionKey), listenerName: Constants.ListenerNames_TransactionAppService);
         }
 
         public IServiceFabriceStorageServices CreateServiceFabricStorageServices()

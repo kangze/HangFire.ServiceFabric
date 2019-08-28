@@ -20,7 +20,9 @@
          The attribute ServiceTypeName below must match the name defined in the imported ServiceManifest.xml file. -->
     <Service Name="HangfireStorage" ServicePackageActivationMode="ExclusiveProcess">
       <StatefulService ServiceTypeName="HangfireStorageType" TargetReplicaSetSize="[HangfireStorage_TargetReplicaSetSize]" MinReplicaSetSize="[HangfireStorage_MinReplicaSetSize]">
-        <SingletonPartition />
+        <NamedPartition>
+          <Partition Name="Default" />
+        </NamedPartition>
       </StatefulService>
     </Service>
   </DefaultServices>

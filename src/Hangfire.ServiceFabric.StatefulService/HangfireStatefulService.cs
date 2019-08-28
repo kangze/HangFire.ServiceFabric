@@ -18,14 +18,11 @@ namespace Hangfire.ServiceFabric.StatefulService
 {
     public abstract class HangfireStatefulService : Microsoft.ServiceFabric.Services.Runtime.StatefulService
     {
-        private readonly string _prefix = "_default";
+        
 
-        protected HangfireStatefulService(StatefulServiceContext context, string prefix)
+        protected HangfireStatefulService(StatefulServiceContext context)
            : base(context)
-        {
-            if (!string.IsNullOrEmpty(prefix))
-                this._prefix = prefix;
-        }
+        { }
 
         /// <summary>
         /// Optional override to create listeners (e.g., HTTP, Service Remoting, WCF, etc.) for this service replica to handle client or user requests.
@@ -36,12 +33,12 @@ namespace Hangfire.ServiceFabric.StatefulService
         /// <returns>A collection of listeners.</returns>
         protected override IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners()
         {
-            return CreateServiceReplicaListeners(this.StateManager, this._prefix);
+            return CreateServiceReplicaListeners(this.StateManager);
         }
 
-        private static IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners(IReliableStateManager stateManager, string prefix)
+        private static IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners(IReliableStateManager stateManager)
         {
-            var dictNames = new DictNames(prefix);
+            var dictNames = new DictNames();
 
             return new[]
             {

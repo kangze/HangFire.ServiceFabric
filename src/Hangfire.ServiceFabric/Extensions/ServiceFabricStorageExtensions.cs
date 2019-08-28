@@ -16,22 +16,23 @@ namespace Hangfire.ServiceFabric.Extensions
     {
         public static IGlobalConfiguration<ServiceFabricStorage> UseServiceFabric(
             [NotNull] this IGlobalConfiguration configuration,
-            [NotNull] string applicationUri)
+            [NotNull] string applicationUri,
+            [NotNull] string partitionKey)
         {
-            return UseServiceFabric(configuration, applicationUri, new ServiceFabricStorageOption());
+            return UseServiceFabric(configuration, applicationUri, partitionKey, new ServiceFabricStorageOption());
         }
 
         public static IGlobalConfiguration<ServiceFabricStorage> UseServiceFabric(
             [NotNull] this IGlobalConfiguration configuration,
             [NotNull] string applicationUri,
+            [NotNull] string partitionKey,
             [NotNull] ServiceFabricStorageOption option)
         {
             if (configuration == null) throw new ArgumentNullException(nameof(configuration));
             if (string.IsNullOrEmpty(applicationUri)) throw new ArgumentNullException(nameof(applicationUri));
             if (option == null) throw new ArgumentNullException(nameof(option));
 
-            var remotingClient = new RemotingClient(applicationUri);
-            //RemotingClient.ApplicationUri = "fabric:/HangfireServiceFabricSfApp/HangfireStorage";
+            var remotingClient = new RemotingClient(applicationUri, partitionKey);
             var storage = new ServiceFabricStorage(remotingClient.CreateServiceFabricStorageServices());
             return configuration.UseStorage(storage);
         }
