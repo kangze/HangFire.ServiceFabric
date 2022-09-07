@@ -5,7 +5,7 @@ Azure Service Fabric Stateful Service support for [Hangfire](http://hangfire.io/
 base on Hangfire@1.7.3
 
 # Installation
-- You must download all source code to local because of this project have not Publish To nuget.org,and add to your Service Fabric Solution.
+- You must download all source code to local because of project that have not publish to Nuget.org,
 - Create a Service Fabric Application with a Stateful Service that reference Hangfire.ServiceFabric.StatefulService Project.
 - Modifiy Stateful Service class make it inherit from HangfireStatefulService.
 ```
