@@ -37,3 +37,7 @@ base on Hangfire@1.7.3
              app.UseHangfireDashboard();
          }
 ```
+
+## License
+
+[MIT](https://oss.ninja/mit/developit)
